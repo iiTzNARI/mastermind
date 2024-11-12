@@ -33,7 +33,7 @@ export default function Singleplayer() {
         maxLength={3}
         value={guess}
         onChange={(e) => setGuess(e.target.value)}
-        className="border p-2 mt-4"
+        className="border p-2 mt-4 text-black"
       />
       <button
         onClick={handleGuess}
