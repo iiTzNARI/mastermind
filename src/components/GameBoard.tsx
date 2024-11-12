@@ -1,14 +1,7 @@
 // src/components/GameBoard.tsx
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { db } from "../utils/firebase";
-import {
-  doc,
-  onSnapshot,
-  writeBatch,
-  getDoc,
-  updateDoc,
-} from "firebase/firestore";
+import { doc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 import { calculateFeedback } from "../utils/calculateFeedback";
 import { v4 as uuidv4 } from "uuid";
 import ExitButton from "./ExitButton";
@@ -16,99 +9,81 @@ import VictoryMessage from "./VictoryMessage";
 
 interface GameBoardProps {
   roomId: string;
+  userCode: string | null;
 }
 
-export default function GameBoard({ roomId }: GameBoardProps) {
+export default function GameBoard({ roomId, userCode }: GameBoardProps) {
   const [guess, setGuess] = useState("");
   const [feedbacks, setFeedbacks] = useState<
     { guess: string; hits: number; blows: number }[]
   >([]);
-  const [roomCode, setRoomCode] = useState("");
+  const [opponentCode, setOpponentCode] = useState(""); // 相手の数字
   const [isWaiting, setIsWaiting] = useState(true);
   const [isWinner, setIsWinner] = useState(false);
   const [isLoser, setIsLoser] = useState(false);
   const [playerId] = useState(uuidv4());
   const joinRoomCalled = useRef(false);
-  const router = useRouter();
-
-  // Firestore購読解除用のref
-  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const roomRef = doc(db, "rooms", roomId);
 
     const joinRoom = async () => {
-      try {
-        if (joinRoomCalled.current) return;
+      if (joinRoomCalled.current) return;
 
-        const roomSnapshot = await getDoc(roomRef);
-        if (!roomSnapshot.exists()) {
-          alert("Room does not exist!");
-          return;
-        }
-
-        const data = roomSnapshot.data();
-        const players = data.players || [];
-
-        if (players.includes(playerId)) {
-          joinRoomCalled.current = true;
-          return;
-        }
-
-        const batch = writeBatch(db);
-        players.push(playerId);
-        batch.update(roomRef, {
-          playerCount: data.playerCount + 1,
-          players,
-          isRoomActive: true, // ルームがアクティブであることを示す
-        });
-
-        await batch.commit();
-        joinRoomCalled.current = true;
-      } catch (error) {
-        console.error("Error updating player count:", error);
-        alert("Failed to join room. The room may already be full.");
+      const roomSnapshot = await getDoc(roomRef);
+      if (!roomSnapshot.exists()) {
+        alert("Room does not exist!");
+        return;
       }
+
+      const data = roomSnapshot.data();
+      const players = data.players || [];
+      const playerKey = players.length === 0 ? "player1" : "player2";
+
+      // 自分の3桁の数字を部屋のデータに追加
+      if (playerKey === "player2" && data.playerCodes) {
+        await updateDoc(roomRef, { "playerCodes.player2": userCode });
+      } else if (playerKey === "player1" && data.playerCodes) {
+        await updateDoc(roomRef, { "playerCodes.player1": userCode });
+      }
+
+      // 相手のコードを設定 (プレイヤー1はplayer2のコードを、プレイヤー2はplayer1のコードを相手の数字とする)
+      setOpponentCode(
+        playerKey === "player1"
+          ? data.playerCodes.player2
+          : data.playerCodes.player1
+      );
+
+      players.push(playerId);
+      await updateDoc(roomRef, { playerCount: players.length, players });
+      joinRoomCalled.current = true;
     };
 
-    if (!joinRoomCalled.current) {
-      joinRoom();
-    }
+    if (!joinRoomCalled.current) joinRoom();
 
-    // Firestoreのリアルタイム購読を設定
     const unsubscribe = onSnapshot(roomRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
-        setRoomCode(data.code || "");
-
-        // プレイヤーが2人揃った場合、待機状態を解除
         setIsWaiting(data.playerCount < 2);
+
+        // リアルタイムで相手のコードを更新
+        const playerKey = data.players[0] === playerId ? "player1" : "player2";
+        setOpponentCode(
+          playerKey === "player1"
+            ? data.playerCodes.player2
+            : data.playerCodes.player1
+        );
 
         // 勝利者がいる場合に勝敗メッセージを表示
         if (data.winner) {
-          if (data.winner === playerId) {
-            setIsWinner(true); // 自分が勝者
-          } else {
-            setIsLoser(true); // 相手が勝者なので自分は敗者
-          }
-        }
-
-        // ルームがアクティブでない場合はホームに戻る
-        if (data.isRoomActive === false && !isWinner && !isLoser) {
-          alert("相手がルームを退出しました。");
-          router.push("/");
+          setIsWinner(data.winner === playerId);
+          setIsLoser(data.winner !== playerId);
         }
       }
     });
 
-    // 購読解除関数をrefに保存
-    unsubscribeRef.current = unsubscribe;
-
-    return () => {
-      // コンポーネントのアンマウント時に購読を解除
-      if (unsubscribeRef.current) unsubscribeRef.current();
-    };
-  }, [roomId, playerId]);
+    return () => unsubscribe();
+  }, [roomId, playerId, userCode]);
 
   const handleWin = async () => {
     const roomRef = doc(db, "rooms", roomId);
@@ -118,16 +93,14 @@ export default function GameBoard({ roomId }: GameBoardProps) {
   const handleGuess = async () => {
     if (isWaiting || isWinner || isLoser) return;
 
-    const feedback = calculateFeedback(guess, roomCode);
+    const feedback = calculateFeedback(guess, opponentCode); // 相手のコードに対して判定
     setFeedbacks([
       ...feedbacks,
       { guess, hits: feedback.hits, blows: feedback.blows },
     ]);
     setGuess("");
 
-    if (feedback.hits === 3) {
-      handleWin();
-    }
+    if (feedback.hits === 3) handleWin();
   };
 
   return (
@@ -165,7 +138,7 @@ export default function GameBoard({ roomId }: GameBoardProps) {
           </div>
         </>
       )}
-      <ExitButton roomId={roomId} unsubscribeRef={unsubscribeRef} />
+      <ExitButton roomId={roomId} unsubscribeRef={{ current: null }} />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+// src/components/MultiplayerLobby.tsx
 import { useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, addDoc } from "firebase/firestore";
@@ -5,24 +6,33 @@ import { collection, addDoc } from "firebase/firestore";
 export default function MultiplayerLobby({
   onJoinRoom,
 }: {
-  onJoinRoom: (roomId: string) => void;
+  onJoinRoom: (roomId: string, code: string) => void; // codeを引数に追加
 }) {
   const [roomCode, setRoomCode] = useState("");
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  const [userCode, setUserCode] = useState(""); // プレイヤーの3桁の数字
+  const [error, setError] = useState<string | null>(null);
+
+  // 3桁の数字が異なるかを確認する関数
+  const isUniqueDigits = (num: string) => {
+    return new Set(num).size === num.length;
+  };
 
   const createRoom = async () => {
     try {
-      const code = Math.floor(Math.random() * 1000)
-        .toString()
-        .padStart(3, "0"); // 3桁のランダムコード
+      if (userCode.length !== 3 || !isUniqueDigits(userCode)) {
+        setError("3桁の数字を入力し、すべての桁を異なるようにしてください。");
+        return;
+      }
+      setError(null);
+
       const roomRef = await addDoc(collection(db, "rooms"), {
-        code,
+        playerCodes: { player1: userCode, player2: "" },
         createdAt: new Date(),
-        playerCount: 0, // 初期状態として 0 に設定
-        players: [], // 初期プレイヤーリストを空にする
+        playerCount: 1,
+        players: [],
       });
 
-      console.log("Room created with ID:", roomRef.id);
       setCreatedRoomId(roomRef.id);
     } catch (error) {
       console.error("Error creating room:", error);
@@ -30,20 +40,23 @@ export default function MultiplayerLobby({
     }
   };
 
-  const joinRoom = () => {
-    if (roomCode) {
-      onJoinRoom(roomCode);
-    }
-  };
-
   const handleJoinRoom = () => {
     if (createdRoomId) {
-      onJoinRoom(createdRoomId);
+      onJoinRoom(createdRoomId, userCode); // userCodeを渡す
     }
   };
 
   return (
     <div>
+      <input
+        type="text"
+        maxLength={3}
+        value={userCode}
+        onChange={(e) => setUserCode(e.target.value.replace(/[^0-9]/g, ""))}
+        placeholder="3桁の数字"
+        className="border p-2 mt-4"
+      />
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <button
         onClick={createRoom}
         className="bg-green-500 text-white px-4 py-2 mt-2"
@@ -51,7 +64,7 @@ export default function MultiplayerLobby({
         Create Room
       </button>
 
-      {createdRoomId ? (
+      {createdRoomId && (
         <div className="mt-4">
           <p>
             Room Created! ID: <span className="font-bold">{createdRoomId}</span>
@@ -64,7 +77,7 @@ export default function MultiplayerLobby({
             Go to Room
           </button>
         </div>
-      ) : null}
+      )}
 
       <div className="mt-4">
         <input
@@ -75,7 +88,7 @@ export default function MultiplayerLobby({
           className="border p-2"
         />
         <button
-          onClick={joinRoom}
+          onClick={() => onJoinRoom(roomCode, userCode)} // userCodeを渡す
           className="bg-blue-500 text-white px-4 py-2 ml-2"
         >
           Join Room
