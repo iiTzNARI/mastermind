@@ -1,44 +1,48 @@
 // src/components/ExitButton.tsx
-import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { db } from "../utils/firebase";
 import { useRouter } from "next/navigation";
+import { db } from "../utils/firebase";
+import { doc, updateDoc, arrayRemove, getDoc } from "firebase/firestore";
 
 interface ExitButtonProps {
   roomId: string;
-  unsubscribeRef: React.MutableRefObject<(() => void) | null>;
+  playerId: string;
 }
 
-export default function ExitButton({
-  roomId,
-  unsubscribeRef,
-}: ExitButtonProps) {
+export default function ExitButton({ roomId, playerId }: ExitButtonProps) {
   const router = useRouter();
 
-  const leaveRoom = async () => {
+  const handleExit = async () => {
     const roomRef = doc(db, "rooms", roomId);
-    try {
-      // Firestoreの購読を解除
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null; // refをリセット
-      }
 
-      // isRoomActive を false に設定してからルームを削除
-      await updateDoc(roomRef, { isRoomActive: false });
-      await deleteDoc(roomRef);
-      router.push("/"); // ホーム画面に遷移
-    } catch (error) {
-      console.error("Error leaving room:", error);
-      alert("Failed to leave room.");
+    // 現在のルームのデータを取得
+    const roomSnapshot = await getDoc(roomRef);
+    if (!roomSnapshot.exists()) {
+      alert("Room does not exist!");
+      return;
     }
+
+    const data = roomSnapshot.data();
+    const currentCount = data.playerCount || 0;
+
+    // プレイヤーを削除し、playerCountを更新
+    await updateDoc(roomRef, {
+      players: arrayRemove(playerId),
+      playerCount: currentCount - 1,
+    });
+
+    // 最新のデータを再度取得し、プレイヤーが0人または1人ならルームを非アクティブにする
+    const updatedSnapshot = await getDoc(roomRef);
+    const updatedData = updatedSnapshot.data();
+    if (updatedData && updatedData.playerCount <= 1) {
+      await updateDoc(roomRef, { isRoomActive: false });
+    }
+
+    router.push("/"); // ホーム画面に戻る
   };
 
   return (
-    <button
-      onClick={leaveRoom}
-      className="bg-red-500 text-white px-4 py-2 mt-4"
-    >
-      退室する
+    <button onClick={handleExit} className="bg-red-500 text-white px-4 py-2">
+      Exit Room
     </button>
   );
 }

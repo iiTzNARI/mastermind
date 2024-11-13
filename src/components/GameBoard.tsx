@@ -1,5 +1,6 @@
 // src/components/GameBoard.tsx
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { db } from "../utils/firebase";
 import { doc, onSnapshot, getDoc, updateDoc } from "firebase/firestore";
 import { calculateFeedback } from "../utils/calculateFeedback";
@@ -23,6 +24,7 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
   const [isLoser, setIsLoser] = useState(false);
   const [playerId] = useState(uuidv4());
   const joinRoomCalled = useRef(false);
+  const router = useRouter();
 
   useEffect(() => {
     const roomRef = doc(db, "rooms", roomId);
@@ -47,7 +49,6 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
         await updateDoc(roomRef, { "playerCodes.player1": userCode });
       }
 
-      // 相手のコードを設定 (プレイヤー1はplayer2のコードを、プレイヤー2はplayer1のコードを相手の数字とする)
       setOpponentCode(
         playerKey === "player1"
           ? data.playerCodes.player2
@@ -64,9 +65,30 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
     const unsubscribe = onSnapshot(roomRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data();
+
+        // 勝敗が決まっている場合は、相手が退出してもアラートを表示しない
+        if ((isWinner || isLoser) && data.isRoomActive === false) {
+          router.push("/"); // ホーム画面に戻る
+          return;
+        }
+
+        // ルームが非アクティブの場合に通知して退室
+        if (data.isRoomActive === false && !isWinner && !isLoser) {
+          const remainingPlayers = data.players || [];
+          if (!remainingPlayers.includes(playerId)) {
+            // 自分が退出した場合：ホーム画面に遷移（アラートなし）
+            router.push("/");
+          } else {
+            // 相手が退出した場合：アラート表示後にホーム画面に遷移
+            alert("相手が退出しました");
+            router.push("/");
+          }
+          return; // 以降の処理をスキップ
+        }
+
+        // 相手がいない状態を設定
         setIsWaiting(data.playerCount < 2);
 
-        // リアルタイムで相手のコードを更新
         const playerKey = data.players[0] === playerId ? "player1" : "player2";
         setOpponentCode(
           playerKey === "player1"
@@ -74,7 +96,6 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
             : data.playerCodes.player1
         );
 
-        // 勝利者がいる場合に勝敗メッセージを表示
         if (data.winner) {
           setIsWinner(data.winner === playerId);
           setIsLoser(data.winner !== playerId);
@@ -83,7 +104,7 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
     });
 
     return () => unsubscribe();
-  }, [roomId, playerId, userCode]);
+  }, [roomId, playerId, userCode, isWinner, isLoser]);
 
   const handleWin = async () => {
     const roomRef = doc(db, "rooms", roomId);
@@ -93,7 +114,7 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
   const handleGuess = async () => {
     if (isWaiting || isWinner || isLoser) return;
 
-    const feedback = calculateFeedback(guess, opponentCode); // 相手のコードに対して判定
+    const feedback = calculateFeedback(guess, opponentCode);
     setFeedbacks([
       ...feedbacks,
       { guess, hits: feedback.hits, blows: feedback.blows },
@@ -138,7 +159,7 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
           </div>
         </>
       )}
-      <ExitButton roomId={roomId} unsubscribeRef={{ current: null }} />
+      <ExitButton roomId={roomId} playerId={playerId} /> {/* playerIdを渡す */}
     </div>
   );
 }
