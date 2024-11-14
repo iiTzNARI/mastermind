@@ -7,6 +7,7 @@ import { calculateFeedback } from "../utils/calculateFeedback";
 import { v4 as uuidv4 } from "uuid";
 import ExitButton from "./ExitButton";
 import VictoryMessage from "./VictoryMessage";
+import { Box, Button, Input, Text, VStack } from "@chakra-ui/react";
 
 interface GameBoardProps {
   roomId: string;
@@ -42,7 +43,6 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
       const players = data.players || [];
       const playerKey = players.length === 0 ? "player1" : "player2";
 
-      // 自分の3桁の数字を部屋のデータに追加
       if (playerKey === "player2" && data.playerCodes) {
         await updateDoc(roomRef, { "playerCodes.player2": userCode });
       } else if (playerKey === "player1" && data.playerCodes) {
@@ -66,27 +66,22 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
       if (doc.exists()) {
         const data = doc.data();
 
-        // 勝敗が決まっている場合は、相手が退出してもアラートを表示しない
         if ((isWinner || isLoser) && data.isRoomActive === false) {
-          router.push("/"); // ホーム画面に戻る
+          router.push("/");
           return;
         }
 
-        // ルームが非アクティブの場合に通知して退室
         if (data.isRoomActive === false && !isWinner && !isLoser) {
           const remainingPlayers = data.players || [];
           if (!remainingPlayers.includes(playerId)) {
-            // 自分が退出した場合：ホーム画面に遷移（アラートなし）
             router.push("/");
           } else {
-            // 相手が退出した場合：アラート表示後にホーム画面に遷移
             alert("相手が退出しました");
             router.push("/");
           }
-          return; // 以降の処理をスキップ
+          return;
         }
 
-        // 相手がいない状態を設定
         setIsWaiting(data.playerCount < 2);
 
         const playerKey = data.players[0] === playerId ? "player1" : "player2";
@@ -125,41 +120,48 @@ export default function GameBoard({ roomId, userCode }: GameBoardProps) {
   };
 
   return (
-    <div>
-      {isWaiting ? (
-        <p>他のプレイヤーを待っています...</p>
-      ) : isWinner ? (
-        <VictoryMessage />
-      ) : isLoser ? (
-        <p>あなたの負けです。</p>
-      ) : (
-        <>
-          <input
-            type="text"
-            maxLength={3}
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            className="border p-2 mt-4"
-          />
-          <button
-            onClick={handleGuess}
-            className="bg-blue-500 text-white px-4 py-2 mt-2"
-          >
-            Submit Guess
-          </button>
-          <div className="mt-4">
-            {feedbacks.map((feedback, index) => (
-              <div key={index} className="mt-2">
-                <p>Guess: {feedback.guess}</p>
-                <p>
-                  Hits: {feedback.hits}, Blows: {feedback.blows}
-                </p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-      <ExitButton roomId={roomId} playerId={playerId} /> {/* playerIdを渡す */}
-    </div>
+    <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
+      <VStack spacing={4} align="stretch">
+        {isWaiting ? (
+          <Text fontSize="lg" color="brand.300">
+            他のプレイヤーを待っています...
+          </Text>
+        ) : isWinner ? (
+          <VictoryMessage />
+        ) : isLoser ? (
+          <Text fontSize="lg" color="red.500">
+            あなたの負けです。
+          </Text>
+        ) : (
+          <>
+            <Input
+              placeholder="3桁の数字を入力"
+              maxLength={3}
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              size="lg"
+              variant="outline"
+              colorScheme="brand"
+              borderColor="gray.500"
+              focusBorderColor="brand.500"
+            />
+            <Button onClick={handleGuess} variant="solid" colorScheme="brand">
+              Submit Guess
+            </Button>
+            <Box mt={4}>
+              {feedbacks.map((feedback, index) => (
+                <Box key={index} p={2} bg="gray.700" borderRadius="md" mb={2}>
+                  <Text>Guess: {feedback.guess}</Text>
+                  <Text>
+                    Hits: {feedback.hits}, Blows: {feedback.blows}
+                  </Text>
+                </Box>
+              ))}
+            </Box>
+          </>
+        )}
+        <ExitButton roomId={roomId} playerId={playerId} />
+      </VStack>
+    </Box>
   );
 }

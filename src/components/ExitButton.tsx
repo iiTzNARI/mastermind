@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { db } from "../utils/firebase";
 import { doc, updateDoc, arrayRemove, getDoc } from "firebase/firestore";
+import { Button } from "@chakra-ui/react";
 
 interface ExitButtonProps {
   roomId: string;
@@ -41,8 +42,18 @@ export default function ExitButton({ roomId, playerId }: ExitButtonProps) {
   };
 
   return (
-    <button onClick={handleExit} className="bg-red-500 text-white px-4 py-2">
-      Exit Room
-    </button>
+    <Button
+      onClick={handleExit}
+      variant="solid"
+      colorScheme="brand"
+      size="lg"
+      borderRadius="md"
+      bg="red.500"
+      _hover={{ bg: "red.600" }}
+      color="white"
+      mt={4}
+    >
+      退出する
+    </Button>
   );
 }

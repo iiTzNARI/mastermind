@@ -1,4 +1,6 @@
+// src/app/singleplayer/page.tsx
 "use client";
+import { Box, Button, Input, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 
 export default function Singleplayer() {
@@ -26,28 +28,34 @@ export default function Singleplayer() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Single Player - Mastermind</h1>
-      <input
-        type="text"
-        maxLength={3}
-        value={guess}
-        onChange={(e) => setGuess(e.target.value)}
-        className="border p-2 mt-4 text-black"
-      />
-      <button
-        onClick={handleGuess}
-        className="bg-blue-500 text-white px-4 py-2 mt-2"
-      >
-        Submit Guess
-      </button>
-      {feedback && (
-        <div className="mt-4">
-          <p>Hits: {feedback.hits}</p>
-          <p>Blows: {feedback.blows}</p>
-        </div>
-      )}
-      {message && <p className="mt-4">{message}</p>}
-    </div>
+    <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
+      <VStack spacing={4} maxW="sm" mx="auto" width="100%">
+        <Text fontSize="2xl" fontWeight="bold" color="brand.300">
+          Single Player - Mastermind
+        </Text>
+        <Input
+          placeholder="3桁の数字を入力"
+          maxLength={3}
+          value={guess}
+          onChange={(e) => setGuess(e.target.value)}
+          size="lg"
+          variant="outline"
+        />
+        <Button onClick={handleGuess} variant="solid" colorScheme="brand">
+          Submit Guess
+        </Button>
+        {feedback && (
+          <Box>
+            <Text color="gray.300">Hits: {feedback.hits}</Text>
+            <Text color="gray.300">Blows: {feedback.blows}</Text>
+          </Box>
+        )}
+        {message && (
+          <Text mt={4} color="gray.300">
+            {message}
+          </Text>
+        )}
+      </VStack>
+    </Box>
   );
 }

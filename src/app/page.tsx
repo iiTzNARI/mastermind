@@ -1,21 +1,38 @@
-import Link from "next/link";
+// src/app/page.tsx
+import { Box, Heading, Text, Button, Stack } from "@chakra-ui/react";
+import { Link } from "@chakra-ui/next-js";
 
 export default function HomePage() {
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">Mastermind Game</h1>
-      <p className="mt-4">Choose a game mode:</p>
-      <div className="mt-4">
-        <Link
+    <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
+      <Heading as="h1" size="xl" mb={4} color="brand.300">
+        Mastermind Game
+      </Heading>
+      <Text mb={4} color="gray.300">
+        Choose a game mode:
+      </Text>
+      <Stack
+        direction={{ base: "column", sm: "row" }}
+        spacing={4}
+        justify="center"
+      >
+        <Button
+          as={Link}
           href="/singleplayer"
-          className="bg-blue-500 text-white px-4 py-2 mr-4"
+          variant="solid"
+          colorScheme="brand"
         >
           Single Player
-        </Link>
-        <Link href="/multiplayer" className="bg-green-500 text-white px-4 py-2">
+        </Button>
+        <Button
+          as={Link}
+          href="/multiplayer"
+          variant="solid"
+          colorScheme="blue"
+        >
           Multiplayer
-        </Link>
-      </div>
-    </div>
+        </Button>
+      </Stack>
+    </Box>
   );
 }
