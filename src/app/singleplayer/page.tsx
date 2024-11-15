@@ -17,6 +17,12 @@ import {
   ModalFooter,
   FormControl,
   FormErrorMessage,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
 } from "@chakra-ui/react";
 
 export default function Singleplayer() {
@@ -53,8 +59,8 @@ export default function Singleplayer() {
 
     if (data.feedback) {
       setFeedbacks([
-        ...feedbacks,
         { guess, hits: data.feedback.hits, blows: data.feedback.blows },
+        ...feedbacks, // 新しいフィードバックを先頭に追加
       ]);
       setMessage(data.message || "");
       if (data.feedback.hits === 3) {
@@ -101,23 +107,43 @@ export default function Singleplayer() {
         >
           Submit Guess
         </Button>
-
-        <Box mt={4} width="100%" maxW="sm">
-          {feedbacks.map((feedback, index) => (
-            <Box
-              key={index}
-              p={3}
-              bg="gray.700"
-              borderRadius="md"
-              mb={2}
-              textAlign="left"
-            >
-              <Text fontWeight="bold">Guess: {feedback.guess}</Text>
-              <Text>
-                Hits: {feedback.hits}, Blows: {feedback.blows}
-              </Text>
-            </Box>
-          ))}
+        <Box
+          mt={4}
+          width="100%"
+          maxW="md"
+          borderWidth="1px"
+          borderRadius="md"
+          overflow="hidden"
+        >
+          <Box overflowY="auto" maxH="300px">
+            <Table variant="striped" size="sm" colorScheme="gray">
+              <Thead bg="gray.800" position="sticky" top={0} zIndex={1}>
+                <Tr>
+                  <Th color="white" fontWeight="bold">
+                    Guess
+                  </Th>
+                  <Th color="white" fontWeight="bold">
+                    Hits
+                  </Th>
+                  <Th color="white" fontWeight="bold">
+                    Blows
+                  </Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {feedbacks.map((feedback, index) => (
+                  <Tr
+                    key={index}
+                    bg={index % 2 === 0 ? "gray.200" : "gray.300"}
+                  >
+                    <Td color="black">{feedback.guess}</Td>
+                    <Td color="black">{feedback.hits}</Td>
+                    <Td color="black">{feedback.blows}</Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
         </Box>
 
         {message && (
