@@ -8,6 +8,7 @@ import {
   deleteDoc,
   arrayRemove,
   getDoc,
+  runTransaction,
 } from "firebase/firestore";
 import { calculateFeedback } from "../utils/calculateFeedback";
 import ExitButton from "./ExitButton";
@@ -46,6 +47,8 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
   const [opponentExited, setOpponentExited] = useState(false);
   const [playerExited, setPlayerExited] = useState(false);
   const [error, setError] = useState(""); // エラーメッセージ
+  const [isMyTurn, setIsMyTurn] = useState(false); // ターン情報
+  const [opponentId, setOpponentId] = useState<string | null>(null); // opponentIdをstateで管理
   const router = useRouter();
 
   useEffect(() => {
@@ -55,7 +58,13 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
       const data = snapshot.data();
       if (!data) return;
 
-      const { playerCount, players = [], playerCodes = {}, winner } = data;
+      const {
+        playerCount,
+        players = [],
+        playerCodes = {},
+        winner,
+        currentTurn,
+      } = data;
 
       if (!players.includes(playerId)) {
         setPlayerExited(true);
@@ -73,12 +82,19 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         setOpponentExited(true);
       }
 
+      // 自分がplayer1かplayer2かを確認し、相手のplayerIdを設定
       const playerKey = players[0] === playerId ? "player1" : "player2";
+      const calculatedOpponentId =
+        playerKey === "player1" ? players[1] : players[0];
+      setOpponentId(calculatedOpponentId); // opponentIdをstateに設定
       setOpponentCode(
         playerKey === "player1"
           ? playerCodes.player2 || ""
           : playerCodes.player1 || ""
       );
+
+      // ターン情報を更新
+      setIsMyTurn(currentTurn === playerId);
     });
 
     return () => unsubscribe();
@@ -116,7 +132,15 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
   };
 
   const handleGuess = async () => {
-    if (isWinner || isLoser || opponentExited || error || guess.length !== 3)
+    if (
+      !isMyTurn ||
+      isWinner ||
+      isLoser ||
+      opponentExited ||
+      error ||
+      guess.length !== 3 ||
+      !opponentId // opponentIdが正しく設定されているか確認
+    )
       return;
 
     const feedback = calculateFeedback(guess, opponentCode);
@@ -126,7 +150,28 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
     ]);
     setGuess("");
 
-    if (feedback.hits === 3) handleWin();
+    if (feedback.hits === 3) {
+      handleWin();
+    } else {
+      // ターンを相手に変更
+      const roomRef = doc(db, "rooms", roomId);
+      await runTransaction(db, async (transaction) => {
+        const roomSnapshot = await transaction.get(roomRef);
+        const data = roomSnapshot.data();
+
+        if (!data) {
+          throw new Error("Room data not found.");
+        }
+
+        // currentTurn を opponentId に変更
+        transaction.update(roomRef, {
+          currentTurn: opponentId,
+        });
+      }).catch((error) => {
+        console.error("Failed to update turn:", error);
+        alert("ターンの更新に失敗しました。もう一度お試しください。");
+      });
+    }
   };
 
   const handleCloseModal = () => {
@@ -171,6 +216,14 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
   return (
     <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
       <VStack spacing={4} align="stretch">
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+          color={isMyTurn ? "green.300" : "red.300"}
+        >
+          {isMyTurn ? "あなたのターンです" : "相手のターンです"}
+        </Text>
+
         <FormControl isInvalid={!!error}>
           <HStack justify="center">
             <PinInput
@@ -179,6 +232,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
               onComplete={handleComplete}
               size="lg"
               type="number"
+              isDisabled={!isMyTurn} // 自分のターンでないと入力不可
             >
               <PinInputField />
               <PinInputField />
@@ -192,7 +246,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
           onClick={handleGuess}
           variant="solid"
           colorScheme="brand"
-          isDisabled={!!error || guess.length !== 3}
+          isDisabled={!isMyTurn || !!error || guess.length !== 3}
         >
           Submit Guess
         </Button>

@@ -94,14 +94,15 @@ export default function Multiplayer() {
 
   const handleCreateRoom = async () => {
     const roomRef = await addDoc(collection(db, "rooms"), {
-      playerCount: 1,
+      playerCount: 0, // 初期設定は 0
       isRoomActive: false,
-      players: [playerId],
+      players: [], // 空の配列で初期化
       isRoomDeleted: false,
     });
     setRoomId(roomRef.id);
     setView("create");
 
+    // 部屋削除タイムアウトを設定
     roomDeletionTimeout.current = setTimeout(async () => {
       try {
         await updateDoc(roomRef, { isRoomDeleted: true });
@@ -121,16 +122,42 @@ export default function Multiplayer() {
     if (roomId) {
       const roomRef = doc(db, "rooms", roomId);
 
-      await updateDoc(roomRef, {
-        playerCount: 1,
-        isRoomActive: true,
-        playerCodes: { player1: userCode },
+      await runTransaction(db, async (transaction) => {
+        const roomSnapshot = await transaction.get(roomRef);
+        const data = roomSnapshot.data();
+
+        if (!data) return;
+
+        // 既存のプレイヤー数に基づいて、プレイヤーを追加し playerCount を更新
+        const updatedPlayerCount = data.playerCount + 1;
+        const playerPosition = updatedPlayerCount === 1 ? "player1" : "player2";
+
+        // プレイヤー情報を設定
+        transaction.update(roomRef, {
+          playerCount: updatedPlayerCount, // プレイヤー数を更新
+          [`playerCodes.${playerPosition}`]: userCode,
+          players: [...(data.players || []), playerId], // プレイヤーIDを追加
+        });
+
+        // 2人目のプレイヤーが「Game Start」を押した時点でターン設定
+        if (updatedPlayerCount === 2) {
+          const opponentId = data.players[0];
+          const randomFirstPlayerId =
+            Math.random() < 0.5 ? playerId : opponentId;
+
+          transaction.update(roomRef, {
+            isRoomActive: true,
+            currentTurn: randomFirstPlayerId, // ランダムに最初のターンを設定
+          });
+        }
       });
+
       setView("waiting");
 
+      // プレイヤー数が2人になるまでリアルタイムで監視し、2人揃ったらゲームを開始
       onSnapshot(roomRef, (snapshot) => {
         const data = snapshot.data();
-        if (data?.playerCount === 2) {
+        if (data?.playerCount === 2 && data?.isRoomActive) {
           setView("game");
         }
       });
@@ -155,29 +182,39 @@ export default function Multiplayer() {
     try {
       await runTransaction(db, async (transaction) => {
         const roomSnapshot = await transaction.get(roomRef);
-        if (!roomSnapshot.exists()) {
-          throw new Error("Room does not exist!");
-        }
+        const data = roomSnapshot.data();
 
-        const roomData = roomSnapshot.data();
-        if (roomData && roomData.playerCount >= 2) {
-          setView("full");
-          return;
-        }
+        if (!data) throw new Error("Room does not exist!");
+
+        const playerPosition = data.playerCount === 1 ? "player2" : "player1";
+        const updatedPlayerCount = data.playerCount + 1;
 
         transaction.update(roomRef, {
-          playerCount: (roomData?.playerCount || 0) + 1,
-          [`playerCodes.player${(roomData?.playerCount || 0) + 1}`]: userCode,
-          players: [...(roomData?.players || []), playerId],
+          playerCount: updatedPlayerCount,
+          [`playerCodes.${playerPosition}`]: userCode,
+          players: [...(data.players || []), playerId],
         });
+
+        // プレイヤー数が2人揃った場合にのみターンをランダムに設定
+        if (updatedPlayerCount === 2) {
+          const opponentId =
+            data.players[0] === playerId ? data.players[1] : data.players[0];
+          const randomFirstPlayerId =
+            Math.random() < 0.5 ? playerId : opponentId;
+          transaction.update(roomRef, {
+            currentTurn: randomFirstPlayerId,
+            isRoomActive: true,
+          });
+        }
       });
 
       setRoomId(inputRoomId);
       setView("waiting");
 
+      // プレイヤー数をリアルタイムで監視し、2人揃ったらゲームを開始
       onSnapshot(roomRef, (snapshot) => {
         const updatedData = snapshot.data();
-        if (updatedData?.playerCount === 2) {
+        if (updatedData?.playerCount === 2 && updatedData?.isRoomActive) {
           setView("game");
         }
       });
