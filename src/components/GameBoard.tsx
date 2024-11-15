@@ -28,6 +28,17 @@ import {
   HStack,
   FormControl,
   FormErrorMessage,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
 } from "@chakra-ui/react";
 
 interface GameBoardProps {
@@ -37,7 +48,10 @@ interface GameBoardProps {
 
 export default function GameBoard({ roomId, playerId }: GameBoardProps) {
   const [guess, setGuess] = useState("");
-  const [feedbacks, setFeedbacks] = useState<
+  const [myFeedbacks, setMyFeedbacks] = useState<
+    { guess: string; hits: number; blows: number }[]
+  >([]);
+  const [opponentFeedbacks, setOpponentFeedbacks] = useState<
     { guess: string; hits: number; blows: number }[]
   >([]);
   const [opponentCode, setOpponentCode] = useState("");
@@ -64,6 +78,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         playerCodes = {},
         winner,
         currentTurn,
+        feedbacks,
       } = data;
 
       if (!players.includes(playerId)) {
@@ -95,6 +110,12 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
 
       // ターン情報を更新
       setIsMyTurn(currentTurn === playerId);
+
+      // フィードバックを分割して表示用のstateに設定
+      const myFeedbacks = feedbacks?.[playerId] || [];
+      const opponentFeedbacks = feedbacks?.[calculatedOpponentId] || [];
+      setMyFeedbacks(myFeedbacks);
+      setOpponentFeedbacks(opponentFeedbacks);
     });
 
     return () => unsubscribe();
@@ -144,16 +165,15 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
       return;
 
     const feedback = calculateFeedback(guess, opponentCode);
-    setFeedbacks([
-      ...feedbacks,
-      { guess, hits: feedback.hits, blows: feedback.blows },
-    ]);
+    const feedbackEntry = { guess, hits: feedback.hits, blows: feedback.blows };
+
+    setMyFeedbacks([...myFeedbacks, feedbackEntry]);
     setGuess("");
 
     if (feedback.hits === 3) {
       handleWin();
     } else {
-      // ターンを相手に変更
+      // データベースのフィードバックを更新し、ターンを相手に変更
       const roomRef = doc(db, "rooms", roomId);
       await runTransaction(db, async (transaction) => {
         const roomSnapshot = await transaction.get(roomRef);
@@ -163,8 +183,14 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
           throw new Error("Room data not found.");
         }
 
+        const updatedFeedbacks = {
+          ...(data.feedbacks || {}),
+          [playerId]: [...(data.feedbacks?.[playerId] || []), feedbackEntry],
+        };
+
         // currentTurn を opponentId に変更
         transaction.update(roomRef, {
+          feedbacks: updatedFeedbacks,
           currentTurn: opponentId,
         });
       }).catch((error) => {
@@ -251,16 +277,55 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
           Submit Guess
         </Button>
 
-        <Box mt={4}>
-          {feedbacks.map((feedback, index) => (
-            <Box key={index} p={2} bg="gray.700" borderRadius="md" mb={2}>
-              <Text>Guess: {feedback.guess}</Text>
-              <Text>
-                Hits: {feedback.hits}, Blows: {feedback.blows}
-              </Text>
-            </Box>
-          ))}
-        </Box>
+        {/* Tabs for self and opponent feedback */}
+        <Tabs variant="solid-rounded" colorScheme="blue" mt={4}>
+          <TabList>
+            <Tab>自分の推測結果</Tab>
+            <Tab>相手の推測結果</Tab>
+          </TabList>
+          <TabPanels>
+            <TabPanel>
+              <Table variant="simple" size="sm">
+                <Thead>
+                  <Tr>
+                    <Th color="gray.600">Guess</Th>
+                    <Th color="gray.600">Hits</Th>
+                    <Th color="gray.600">Blows</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {myFeedbacks.map((feedback, index) => (
+                    <Tr key={index}>
+                      <Td>{feedback.guess}</Td>
+                      <Td>{feedback.hits}</Td>
+                      <Td>{feedback.blows}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TabPanel>
+            <TabPanel>
+              <Table variant="simple" size="sm">
+                <Thead>
+                  <Tr>
+                    <Th color="gray.600">Guess</Th>
+                    <Th color="gray.600">Hits</Th>
+                    <Th color="gray.600">Blows</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {opponentFeedbacks.map((feedback, index) => (
+                    <Tr key={index}>
+                      <Td>{feedback.guess}</Td>
+                      <Td>{feedback.hits}</Td>
+                      <Td>{feedback.blows}</Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </TabPanel>
+          </TabPanels>
+        </Tabs>
 
         <ExitButton
           roomId={roomId}
