@@ -1,4 +1,3 @@
-// src/app/singleplayer/page.tsx
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,6 +15,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  FormControl,
+  FormErrorMessage,
 } from "@chakra-ui/react";
 
 export default function Singleplayer() {
@@ -24,9 +25,23 @@ export default function Singleplayer() {
     { guess: string; hits: number; blows: number }[]
   >([]);
   const [message, setMessage] = useState("");
-  const [isWinner, setIsWinner] = useState(false); // 勝利フラグ
+  const [isWinner, setIsWinner] = useState(false);
   const [pinInputKey, setPinInputKey] = useState(0);
+  const [error, setError] = useState("");
   const router = useRouter();
+
+  const hasUniqueDigits = (value: string) => {
+    return new Set(value).size === value.length;
+  };
+
+  const handleComplete = (value: string) => {
+    setGuess(value);
+    if (value.length === 3 && !hasUniqueDigits(value)) {
+      setError("3桁の数字はすべて異なる必要があります");
+    } else {
+      setError("");
+    }
+  };
 
   const handleGuess = async () => {
     const response = await fetch("/api/singleplayer", {
@@ -43,22 +58,18 @@ export default function Singleplayer() {
       ]);
       setMessage(data.message || "");
       if (data.feedback.hits === 3) {
-        setIsWinner(true); // 勝利時にモーダルを表示するために設定
+        setIsWinner(true);
       }
     } else {
       setMessage(data.message);
     }
 
     setGuess("");
-    setPinInputKey((prevKey) => prevKey + 1); // PinInputをリセット
-  };
-
-  const handleComplete = (value: string) => {
-    setGuess(value);
+    setPinInputKey((prevKey) => prevKey + 1);
   };
 
   const handleExit = () => {
-    router.push("/"); // ホーム画面に戻る
+    router.push("/");
   };
 
   return (
@@ -67,23 +78,26 @@ export default function Singleplayer() {
         <Text fontSize="2xl" fontWeight="bold" color="brand.300">
           Single Player - Mastermind
         </Text>
-        <HStack spacing={2} justify="center">
-          <PinInput
-            key={pinInputKey}
-            size="lg"
-            onComplete={handleComplete}
-            type="number"
-          >
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-          </PinInput>
-        </HStack>
+        <FormControl isInvalid={!!error}>
+          <HStack spacing={2} justify="center">
+            <PinInput
+              key={pinInputKey}
+              size="lg"
+              onComplete={handleComplete}
+              type="number"
+            >
+              <PinInputField />
+              <PinInputField />
+              <PinInputField />
+            </PinInput>
+          </HStack>
+          <FormErrorMessage>{error}</FormErrorMessage>
+        </FormControl>
         <Button
           onClick={handleGuess}
           variant="solid"
           colorScheme="brand"
-          isDisabled={guess.length !== 3}
+          isDisabled={guess.length !== 3 || !!error}
         >
           Submit Guess
         </Button>
@@ -112,12 +126,10 @@ export default function Singleplayer() {
           </Text>
         )}
 
-        {/* 退室するボタン */}
         <Button mt={6} colorScheme="red" onClick={handleExit}>
           退室する
         </Button>
 
-        {/* 勝利時のモーダル */}
         <Modal isOpen={isWinner} onClose={handleExit}>
           <ModalOverlay />
           <ModalContent>
