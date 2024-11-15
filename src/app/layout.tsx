@@ -1,20 +1,20 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import ClientProvider from "./ClientProvider";
-import localFont from "next/font/local";
+// import localFont from "next/font/local";
 import "./globals.css";
 import { Container, Box } from "@chakra-ui/react";
 
 // シンプルなフォント設定
-const geistSans = localFont({
-  src: "/fonts/GeistVF.woff",
-  display: "swap",
-});
+// const geistSans = localFont({
+//   src: "/fonts/GeistVF.woff",
+//   display: "swap",
+// });
 
-const geistMono = localFont({
-  src: "/fonts/GeistMonoVF.woff",
-  display: "swap",
-});
+// const geistMono = localFont({
+//   src: "/fonts/GeistMonoVF.woff",
+//   display: "swap",
+// });
 
 export const metadata: Metadata = {
   title: "Mastermind Game",
