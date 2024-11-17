@@ -43,7 +43,7 @@ const theme = extendTheme({
   components: {
     Button: {
       baseStyle: {
-        borderRadius: "full", // ボタンの角を丸くする
+        borderRadius: "lg", // ボタンの角を丸くする
       },
       variants: {
         solid: {
@@ -66,7 +66,7 @@ const theme = extendTheme({
       sizes: {
         md: {
           field: {
-            borderRadius: "full", // 入力フィールドも丸くする
+            borderRadius: "lg", // 入力フィールドも丸くする
           },
         },
       },

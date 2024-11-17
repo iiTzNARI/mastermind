@@ -80,6 +80,9 @@ export default function ExitButton({
         size="lg"
         borderRadius="md"
         mt={4}
+        bg="red.500" // 強制的に背景色を設定
+        _hover={{ bg: "red.600" }} // 明示的なホバースタイル
+        _active={{ bg: "red.700" }} // アクティブ時のスタイル
       >
         退出する
       </Button>

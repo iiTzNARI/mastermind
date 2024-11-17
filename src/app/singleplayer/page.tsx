@@ -79,7 +79,7 @@ export default function Singleplayer() {
   };
 
   return (
-    <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
+    <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
       <VStack spacing={4}>
         <Text fontSize="2xl" fontWeight="bold" color="brand.300">
           Single Player - Mastermind
@@ -107,43 +107,26 @@ export default function Singleplayer() {
         >
           Submit Guess
         </Button>
-        <Box
-          mt={4}
-          width="100%"
-          maxW="md"
-          borderWidth="1px"
-          borderRadius="md"
-          overflow="hidden"
-        >
-          <Box overflowY="auto" maxH="300px">
-            <Table variant="striped" size="sm" colorScheme="gray">
-              <Thead bg="gray.800" position="sticky" top={0} zIndex={1}>
-                <Tr>
-                  <Th color="white" fontWeight="bold">
-                    Guess
-                  </Th>
-                  <Th color="white" fontWeight="bold">
-                    Hits
-                  </Th>
-                  <Th color="white" fontWeight="bold">
-                    Blows
-                  </Th>
+
+        <Box mt={4} overflowY="auto" maxH="300px" width="100%">
+          <Table variant="simple" size="sm">
+            <Thead position="sticky" top={0} bg="gray.700">
+              <Tr>
+                <Th color="white">Guess</Th>
+                <Th color="white">Hits</Th>
+                <Th color="white">Blows</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {feedbacks.map((feedback, index) => (
+                <Tr key={index}>
+                  <Td>{feedback.guess}</Td>
+                  <Td>{feedback.hits}</Td>
+                  <Td>{feedback.blows}</Td>
                 </Tr>
-              </Thead>
-              <Tbody>
-                {feedbacks.map((feedback, index) => (
-                  <Tr
-                    key={index}
-                    bg={index % 2 === 0 ? "gray.200" : "gray.300"}
-                  >
-                    <Td color="black">{feedback.guess}</Td>
-                    <Td color="black">{feedback.hits}</Td>
-                    <Td color="black">{feedback.blows}</Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
+              ))}
+            </Tbody>
+          </Table>
         </Box>
 
         {message && (

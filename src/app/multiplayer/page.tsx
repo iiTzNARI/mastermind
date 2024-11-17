@@ -11,7 +11,6 @@ import {
   PinInputField,
   InputGroup,
   InputRightElement,
-  useClipboard,
   Spinner,
   Modal,
   ModalOverlay,
@@ -38,6 +37,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import GameBoard from "../../components/GameBoard";
 import ExitButton from "../../components/ExitButton";
+import CopyButton from "@/components/CopyButton";
 
 const floatingLabelStyles = {
   position: "absolute" as const,
@@ -58,7 +58,6 @@ export default function Multiplayer() {
   const [userCode, setUserCode] = useState("");
   const [inputRoomId, setInputRoomId] = useState("");
   const [playerId] = useState(uuidv4());
-  const { hasCopied, onCopy } = useClipboard(roomId || "");
   const roomDeletionTimeout = useRef<NodeJS.Timeout | null>(null);
   const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [error, setError] = useState("");
@@ -229,17 +228,6 @@ export default function Multiplayer() {
     setView("initial");
   };
 
-  const RoomIdDisplay = (
-    <InputGroup size="md" width="100%">
-      <Input pr="4.5rem" value={roomId || ""} isReadOnly />
-      <InputRightElement width="4.5rem">
-        <Button h="1.75rem" size="sm" onClick={onCopy}>
-          {hasCopied ? "Copied" : "Copy"}
-        </Button>
-      </InputRightElement>
-    </InputGroup>
-  );
-
   return (
     <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
       <Heading as="h1" size="xl" mb={4} color="blue.300">
@@ -262,8 +250,20 @@ export default function Multiplayer() {
 
       {view === "create" && roomId && (
         <VStack spacing={4} maxWidth="sm" width="100%">
-          <Text>Room ID:</Text>
-          {RoomIdDisplay}
+          <FormControl position="relative">
+            <InputGroup size="md">
+              <Input
+                placeholder=" "
+                value={roomId}
+                isReadOnly
+                _placeholder={{ color: "transparent" }}
+              />
+              <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
+              <InputRightElement width="4.5rem" pr="1">
+                <CopyButton value={roomId}></CopyButton>
+              </InputRightElement>
+            </InputGroup>
+          </FormControl>
           <Text>Enter your 3-digit code:</Text>
           <FormControl isInvalid={!!error}>
             <HStack spacing={2} justify="center">
@@ -338,8 +338,20 @@ export default function Multiplayer() {
           <Spinner color="blue.300" size="md" />
           {roomId && (
             <>
-              <Text>Room ID:</Text>
-              {RoomIdDisplay}
+              <FormControl position="relative">
+                <InputGroup size="md">
+                  <Input
+                    placeholder=" "
+                    value={roomId}
+                    isReadOnly
+                    _placeholder={{ color: "transparent" }}
+                  />
+                  <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
+                  <InputRightElement width="4.5rem" pr="1">
+                    <CopyButton value={roomId}></CopyButton>
+                  </InputRightElement>
+                </InputGroup>
+              </FormControl>
             </>
           )}
           <ExitButton roomId={roomId || ""} playerId={playerId} />

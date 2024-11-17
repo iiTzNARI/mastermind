@@ -7,7 +7,6 @@ import {
   updateDoc,
   deleteDoc,
   arrayRemove,
-  getDoc,
   runTransaction,
 } from "firebase/firestore";
 import { calculateFeedback } from "../utils/calculateFeedback";
@@ -40,6 +39,7 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
+import { LuUser } from "react-icons/lu";
 
 interface GameBoardProps {
   roomId: string;
@@ -60,15 +60,15 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
   const [showModal, setShowModal] = useState(false);
   const [opponentExited, setOpponentExited] = useState(false);
   const [playerExited, setPlayerExited] = useState(false);
-  const [error, setError] = useState(""); // エラーメッセージ
-  const [isMyTurn, setIsMyTurn] = useState(false); // ターン情報
-  const [opponentId, setOpponentId] = useState<string | null>(null); // opponentIdをstateで管理
+  const [error, setError] = useState("");
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [opponentId, setOpponentId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const roomRef = doc(db, "rooms", roomId);
 
-    const unsubscribe = onSnapshot(roomRef, async (snapshot) => {
+    const unsubscribe = onSnapshot(roomRef, (snapshot) => {
       const data = snapshot.data();
       if (!data) return;
 
@@ -97,25 +97,21 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         setOpponentExited(true);
       }
 
-      // 自分がplayer1かplayer2かを確認し、相手のplayerIdを設定
       const playerKey = players[0] === playerId ? "player1" : "player2";
       const calculatedOpponentId =
         playerKey === "player1" ? players[1] : players[0];
-      setOpponentId(calculatedOpponentId); // opponentIdをstateに設定
+      setOpponentId(calculatedOpponentId);
       setOpponentCode(
         playerKey === "player1"
           ? playerCodes.player2 || ""
           : playerCodes.player1 || ""
       );
 
-      // ターン情報を更新
       setIsMyTurn(currentTurn === playerId);
 
-      // フィードバックを分割して表示用のstateに設定
-      const myFeedbacks = feedbacks?.[playerId] || [];
-      const opponentFeedbacks = feedbacks?.[calculatedOpponentId] || [];
-      setMyFeedbacks(myFeedbacks);
-      setOpponentFeedbacks(opponentFeedbacks);
+      // フィードバックをそのまま新しい順にセット
+      setMyFeedbacks(feedbacks?.[playerId] || []);
+      setOpponentFeedbacks(feedbacks?.[calculatedOpponentId] || []);
     });
 
     return () => unsubscribe();
@@ -160,44 +156,37 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
       opponentExited ||
       error ||
       guess.length !== 3 ||
-      !opponentId // opponentIdが正しく設定されているか確認
+      !opponentId
     )
       return;
 
     const feedback = calculateFeedback(guess, opponentCode);
     const feedbackEntry = { guess, hits: feedback.hits, blows: feedback.blows };
 
-    setMyFeedbacks([...myFeedbacks, feedbackEntry]);
-    setGuess("");
+    const roomRef = doc(db, "rooms", roomId);
+    await runTransaction(db, async (transaction) => {
+      const roomSnapshot = await transaction.get(roomRef);
+      const data = roomSnapshot.data();
+
+      if (!data) {
+        throw new Error("Room data not found.");
+      }
+
+      const updatedFeedbacks = {
+        ...(data.feedbacks || {}),
+        [playerId]: [feedbackEntry, ...(data.feedbacks?.[playerId] || [])],
+      };
+
+      transaction.update(roomRef, {
+        feedbacks: updatedFeedbacks,
+        currentTurn: opponentId,
+      });
+    });
 
     if (feedback.hits === 3) {
       handleWin();
-    } else {
-      // データベースのフィードバックを更新し、ターンを相手に変更
-      const roomRef = doc(db, "rooms", roomId);
-      await runTransaction(db, async (transaction) => {
-        const roomSnapshot = await transaction.get(roomRef);
-        const data = roomSnapshot.data();
-
-        if (!data) {
-          throw new Error("Room data not found.");
-        }
-
-        const updatedFeedbacks = {
-          ...(data.feedbacks || {}),
-          [playerId]: [...(data.feedbacks?.[playerId] || []), feedbackEntry],
-        };
-
-        // currentTurn を opponentId に変更
-        transaction.update(roomRef, {
-          feedbacks: updatedFeedbacks,
-          currentTurn: opponentId,
-        });
-      }).catch((error) => {
-        console.error("Failed to update turn:", error);
-        alert("ターンの更新に失敗しました。もう一度お試しください。");
-      });
     }
+    setGuess("");
   };
 
   const handleCloseModal = () => {
@@ -210,27 +199,9 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
     const roomRef = doc(db, "rooms", roomId);
 
     try {
-      const roomSnapshot = await getDoc(roomRef);
-
-      if (!roomSnapshot.exists()) {
-        alert("Room does not exist!");
-        router.push("/");
-        return;
-      }
-
-      const data = roomSnapshot.data();
-      const currentCount = data?.playerCount || 0;
-
       await updateDoc(roomRef, {
         players: arrayRemove(playerId),
-        playerCount: currentCount - 1,
       });
-
-      const updatedSnapshot = await getDoc(roomRef);
-      const updatedData = updatedSnapshot.data();
-      if (updatedData?.playerCount === 0) {
-        await deleteDoc(roomRef);
-      }
 
       router.push("/");
     } catch (error) {
@@ -258,7 +229,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
               onComplete={handleComplete}
               size="lg"
               type="number"
-              isDisabled={!isMyTurn} // 自分のターンでないと入力不可
+              isDisabled={!isMyTurn}
             >
               <PinInputField />
               <PinInputField />
@@ -277,52 +248,68 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
           Submit Guess
         </Button>
 
-        {/* Tabs for self and opponent feedback */}
-        <Tabs variant="solid-rounded" colorScheme="blue" mt={4}>
-          <TabList>
-            <Tab>自分の推測結果</Tab>
-            <Tab>相手の推測結果</Tab>
+        <Tabs variant="unstyled" mt={4}>
+          <TabList bg="gray.700" borderRadius="md" p={1}>
+            <Tab
+              _selected={{ bg: "gray.900", color: "white" }}
+              borderRadius="md"
+            >
+              <LuUser style={{ marginRight: "8px" }} />
+              自分の結果
+            </Tab>
+            <Tab
+              _selected={{ bg: "gray.900", color: "white" }}
+              borderRadius="md"
+            >
+              {/* <LuFolder style={{ marginRight: "8px" }} /> */}
+              <LuUser style={{ marginRight: "8px" }} />
+              相手の結果
+            </Tab>
           </TabList>
           <TabPanels>
             <TabPanel>
-              <Table variant="simple" size="sm">
-                <Thead>
-                  <Tr>
-                    <Th color="gray.600">Guess</Th>
-                    <Th color="gray.600">Hits</Th>
-                    <Th color="gray.600">Blows</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {myFeedbacks.map((feedback, index) => (
-                    <Tr key={index}>
-                      <Td>{feedback.guess}</Td>
-                      <Td>{feedback.hits}</Td>
-                      <Td>{feedback.blows}</Td>
+              <Box overflowY="auto" maxH="300px">
+                <Table variant="simple" size="sm">
+                  <Thead position="sticky" top={0} bg="gray.700">
+                    <Tr>
+                      <Th color="white">Guess</Th>
+                      <Th color="white">Hit</Th>
+                      <Th color="white">Blow</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {myFeedbacks.map((feedback, index) => (
+                      <Tr key={index}>
+                        <Td>{feedback.guess}</Td>
+                        <Td>{feedback.hits}</Td>
+                        <Td>{feedback.blows}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </Box>
             </TabPanel>
             <TabPanel>
-              <Table variant="simple" size="sm">
-                <Thead>
-                  <Tr>
-                    <Th color="gray.600">Guess</Th>
-                    <Th color="gray.600">Hits</Th>
-                    <Th color="gray.600">Blows</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {opponentFeedbacks.map((feedback, index) => (
-                    <Tr key={index}>
-                      <Td>{feedback.guess}</Td>
-                      <Td>{feedback.hits}</Td>
-                      <Td>{feedback.blows}</Td>
+              <Box overflowY="auto" maxH="300px">
+                <Table variant="simple" size="sm">
+                  <Thead position="sticky" top={0} bg="gray.700">
+                    <Tr>
+                      <Th color="white">Guess</Th>
+                      <Th color="white">Hit</Th>
+                      <Th color="white">Blow</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {opponentFeedbacks.map((feedback, index) => (
+                      <Tr key={index}>
+                        <Td>{feedback.guess}</Td>
+                        <Td>{feedback.hits}</Td>
+                        <Td>{feedback.blows}</Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </Box>
             </TabPanel>
           </TabPanels>
         </Tabs>
@@ -334,7 +321,6 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         />
       </VStack>
 
-      {/* 勝敗モーダル */}
       <Modal isOpen={showModal} onClose={handleCloseModal}>
         <ModalOverlay />
         <ModalContent>
@@ -350,7 +336,6 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         </ModalContent>
       </Modal>
 
-      {/* 相手退出モーダル */}
       {!playerExited && (
         <Modal isOpen={opponentExited} onClose={handleOpponentExit}>
           <ModalOverlay />
