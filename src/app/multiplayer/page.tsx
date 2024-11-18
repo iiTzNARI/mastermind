@@ -54,10 +54,9 @@ export default function Multiplayer() {
   }, [roomId]);
 
   useEffect(() => {
+    const timeout = roomDeletionTimeout.current;
     return () => {
-      if (roomDeletionTimeout.current) {
-        clearTimeout(roomDeletionTimeout.current);
-      }
+      if (timeout) clearTimeout(timeout);
     };
   }, []);
 
