@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -6,8 +7,8 @@ import {
   Button,
   Text,
   VStack,
-  PinInput,
-  PinInputField,
+  // PinInput,
+  // PinInputField,
   HStack,
   Modal,
   ModalOverlay,
@@ -24,6 +25,14 @@ import {
   Th,
   Td,
 } from "@chakra-ui/react";
+const PinInput = dynamic(
+  () => import("@chakra-ui/react").then((mod) => mod.PinInput),
+  { ssr: false }
+);
+const PinInputField = dynamic(
+  () => import("@chakra-ui/react").then((mod) => mod.PinInputField),
+  { ssr: false }
+);
 
 export default function Singleplayer() {
   const [guess, setGuess] = useState("");
