@@ -1,28 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import {
-  Box,
-  Button,
-  Heading,
-  VStack,
-  Text,
-  HStack,
-  PinInput,
-  PinInputField,
-  InputGroup,
-  InputRightElement,
-  Spinner,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  Input,
-} from "@chakra-ui/react";
+import { Box, Heading } from "@chakra-ui/react";
 import { db } from "../../utils/firebase";
 import {
   collection,
@@ -33,22 +11,17 @@ import {
   runTransaction,
   onSnapshot,
   deleteDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 import GameBoard from "../../components/GameBoard";
-import ExitButton from "../../components/ExitButton";
-import CopyButton from "@/components/CopyButton";
-
-const floatingLabelStyles = {
-  position: "absolute" as const,
-  top: "-8px",
-  left: "10px",
-  backgroundColor: "gray.800",
-  paddingX: "1",
-  fontSize: "sm",
-  color: "gray.500",
-  transition: "0.2s ease",
-};
+import InitialView_Multi from "../../components/InitialView_Multi";
+import CreateView_Multi from "@/components/CreateView_Multi";
+import JoinView_Multi from "@/components/JoinView_Multi";
+import WaitingView_Multi from "@/components/WaitingView_Multi";
+import FinishGameModal from "@/components/FinishGameModal";
+import FullView_Multi from "@/components/FullView_Multi";
+import RoomTimeoutModal from "@/components/RoomTimeoutModal";
 
 export default function Multiplayer() {
   const [view, setView] = useState<
@@ -60,7 +33,26 @@ export default function Multiplayer() {
   const [playerId] = useState(uuidv4());
   const roomDeletionTimeout = useRef<NodeJS.Timeout | null>(null);
   const [showDeletionModal, setShowDeletionModal] = useState(false);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (roomId) {
+      const roomRef = doc(db, "rooms", roomId);
+
+      // Firestoreのリアルタイムリスナーを設定
+      const unsubscribe = onSnapshot(roomRef, (snapshot) => {
+        const data = snapshot.data();
+        if (data?.isRoomDeleted) {
+          setShowTimeoutModal(true); // モーダルを表示
+        }
+      });
+
+      return () => {
+        unsubscribe(); // クリーンアップ
+      };
+    }
+  }, [roomId]);
 
   useEffect(() => {
     return () => {
@@ -83,7 +75,7 @@ export default function Multiplayer() {
     }
   };
 
-  const handleComplete = (value: string) => {
+  const handlePinComplete = (value: string) => {
     if (!hasUniqueDigits(value)) {
       setError("3桁の数字はすべて異なる必要があります");
     } else {
@@ -92,25 +84,34 @@ export default function Multiplayer() {
   };
 
   const handleCreateRoom = async () => {
+    const currentTime = Timestamp.now(); // 現在のサーバー時間
+    const timeoutDuration = 3 * 60 * 60; // タイムアウトまでの秒数
+    const timeoutTimestamp = new Timestamp(
+      currentTime.seconds + timeoutDuration,
+      currentTime.nanoseconds
+    );
+
     const roomRef = await addDoc(collection(db, "rooms"), {
-      playerCount: 0, // 初期設定は 0
+      playerCount: 0,
       isRoomActive: false,
-      players: [], // 空の配列で初期化
+      players: [],
       isRoomDeleted: false,
+      timeoutTimestamp,
     });
+
     setRoomId(roomRef.id);
     setView("create");
 
-    // 部屋削除タイムアウトを設定
-    roomDeletionTimeout.current = setTimeout(async () => {
+    // タイムアウトのカウントをサーバーで管理
+    setTimeout(async () => {
       try {
         await updateDoc(roomRef, { isRoomDeleted: true });
-        await deleteDoc(roomRef);
+        await deleteDoc(roomRef); // ルームを削除
         console.log("Room deleted automatically due to inactivity.");
       } catch (error) {
         console.error("Failed to delete room:", error);
       }
-    }, 3 * 60 * 60 * 1000);
+    }, timeoutDuration * 1000); // タイムアウト時間
   };
 
   const handleJoinRoom = () => {
@@ -228,6 +229,10 @@ export default function Multiplayer() {
     setView("initial");
   };
 
+  const handleBackToHome = () => {
+    setView("initial");
+  };
+
   return (
     <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
       <Heading as="h1" size="xl" mb={4} color="blue.300">
@@ -235,127 +240,48 @@ export default function Multiplayer() {
       </Heading>
 
       {view === "initial" && (
-        <VStack spacing={4}>
-          <Button colorScheme="blue" onClick={handleCreateRoom}>
-            Create Room
-          </Button>
-          <Button colorScheme="green" onClick={handleJoinRoom}>
-            Join Room
-          </Button>
-          <Button colorScheme="gray" onClick={() => setView("initial")}>
-            Back to Home
-          </Button>
-        </VStack>
+        <InitialView_Multi
+          onCreateRoom={handleCreateRoom}
+          onJoinRoom={handleJoinRoom}
+          onBackToHome={handleBackToHome}
+        />
       )}
 
-      {view === "create" && roomId && (
-        <VStack spacing={4} maxWidth="sm" width="100%">
-          <FormControl position="relative">
-            <InputGroup size="md">
-              <Input
-                placeholder=" "
-                value={roomId}
-                isReadOnly
-                _placeholder={{ color: "transparent" }}
-              />
-              <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
-              <InputRightElement width="4.5rem" pr="1">
-                <CopyButton value={roomId}></CopyButton>
-              </InputRightElement>
-            </InputGroup>
-          </FormControl>
-          <Text>Enter your 3-digit code:</Text>
-          <FormControl isInvalid={!!error}>
-            <HStack spacing={2} justify="center">
-              <PinInput
-                size="lg"
-                type="number"
-                value={userCode}
-                onChange={handlePinChange}
-                onComplete={handleComplete}
-              >
-                <PinInputField />
-                <PinInputField />
-                <PinInputField />
-              </PinInput>
-            </HStack>
-            <FormErrorMessage>{error}</FormErrorMessage>
-          </FormControl>
-          <Button
-            colorScheme="blue"
-            onClick={handleGameStart}
-            isDisabled={userCode.length !== 3 || !!error}
-          >
-            Game Start
-          </Button>
-          <ExitButton roomId={roomId || ""} playerId={playerId} />
-        </VStack>
+      {view === "create" && (
+        <CreateView_Multi
+          roomId={roomId}
+          userCode={userCode}
+          error={error}
+          onPinChange={handlePinChange}
+          onPinComplete={handlePinComplete}
+          onGameStart={handleGameStart}
+          onBackToInitial={handleBackToHome}
+          isGameStartDisabled={userCode.length !== 3 || !!error}
+        />
       )}
 
       {view === "join" && (
-        <VStack spacing={4}>
-          <FormControl position="relative">
-            <Input
-              placeholder=" "
-              value={inputRoomId}
-              onChange={(e) => setInputRoomId(e.target.value)}
-              _placeholder={{ color: "transparent" }}
-            />
-            <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
-          </FormControl>
-          <Text>Enter your 3-digit code:</Text>
-          <FormControl isInvalid={!!error}>
-            <HStack spacing={2} justify="center">
-              <PinInput
-                size="lg"
-                type="number"
-                value={userCode}
-                onChange={handlePinChange}
-                onComplete={handleComplete}
-              >
-                <PinInputField />
-                <PinInputField />
-                <PinInputField />
-              </PinInput>
-            </HStack>
-            <FormErrorMessage>{error}</FormErrorMessage>
-          </FormControl>
-          <Button
-            colorScheme="green"
-            onClick={handleRoomJoin}
-            isDisabled={
-              inputRoomId.length === 0 || userCode.length !== 3 || !!error
-            }
-          >
-            Game Start
-          </Button>
-        </VStack>
+        <JoinView_Multi
+          inputRoomId={inputRoomId}
+          userCode={userCode}
+          error={error}
+          isJoinDisabled={
+            inputRoomId.length === 0 || userCode.length !== 3 || !!error
+          }
+          onInputRoomIdChange={setInputRoomId}
+          onPinChange={handlePinChange}
+          onPinComplete={handlePinComplete}
+          onJoinRoom={handleRoomJoin}
+          onBackToInitial={handleBackToHome}
+        />
       )}
 
       {view === "waiting" && (
-        <VStack spacing={4} maxWidth="sm" width="100%">
-          <Text>対戦相手を待っています...</Text>
-          <Spinner color="blue.300" size="md" />
-          {roomId && (
-            <>
-              <FormControl position="relative">
-                <InputGroup size="md">
-                  <Input
-                    placeholder=" "
-                    value={roomId}
-                    isReadOnly
-                    _placeholder={{ color: "transparent" }}
-                  />
-                  <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
-                  <InputRightElement width="4.5rem" pr="1">
-                    <CopyButton value={roomId}></CopyButton>
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-            </>
-          )}
-          <ExitButton roomId={roomId || ""} playerId={playerId} />
-        </VStack>
+        <WaitingView_Multi
+          roomId={roomId}
+          playerId={playerId}
+          onExit={handleBackToHome}
+        />
       )}
 
       {view === "game" && roomId && userCode && (
@@ -363,32 +289,11 @@ export default function Multiplayer() {
       )}
 
       {view === "full" && (
-        <VStack spacing={4}>
-          <Text color="red.500">
-            This room is full. Please try another room.
-          </Text>
-          <Button colorScheme="blue" onClick={() => setView("initial")}>
-            Back to Home
-          </Button>
-        </VStack>
+        <FullView_Multi onBackToInitial={() => setView("initial")} />
       )}
 
-      <Modal isOpen={showDeletionModal} onClose={handleCloseModal}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Room Deleted</ModalHeader>
-          <ModalBody>
-            <Text>
-              The room has been automatically deleted due to inactivity.
-            </Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleCloseModal}>
-              Back to Home
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <FinishGameModal isOpen={showDeletionModal} onClose={handleCloseModal} />
+      <RoomTimeoutModal isOpen={showTimeoutModal} />
     </Box>
   );
 }
