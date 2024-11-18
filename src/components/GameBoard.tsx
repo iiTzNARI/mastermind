@@ -11,35 +11,11 @@ import {
 } from "firebase/firestore";
 import { calculateFeedback } from "../utils/calculateFeedback";
 import ExitButton from "./ExitButton";
-import {
-  Box,
-  Button,
-  Text,
-  VStack,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  PinInput,
-  PinInputField,
-  HStack,
-  FormControl,
-  FormErrorMessage,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-} from "@chakra-ui/react";
-import { LuUser } from "react-icons/lu";
+import { Box, Text, VStack } from "@chakra-ui/react";
+import ResultMultiModal from "./ResultMultiModal";
+import OpponentExitModal from "./OpponentExitModal";
+import NumberInputForm from "./NumberInputForm";
+import ResultTabsMulti from "./ResultTabsMulti";
 
 interface GameBoardProps {
   roomId: string;
@@ -109,7 +85,6 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
 
       setIsMyTurn(currentTurn === playerId);
 
-      // フィードバックをそのまま新しい順にセット
       setMyFeedbacks(feedbacks?.[playerId] || []);
       setOpponentFeedbacks(feedbacks?.[calculatedOpponentId] || []);
     });
@@ -124,7 +99,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
   const handlePinChange = (value: string) => {
     setGuess(value);
     if (value.length === 3 && !hasUniqueDigits(value)) {
-      setError("3桁の数字はすべて異なる必要があります");
+      setError("All three digits must be unique.");
     } else {
       setError("");
     }
@@ -132,7 +107,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
 
   const handleComplete = (value: string) => {
     if (!hasUniqueDigits(value)) {
-      setError("3桁の数字はすべて異なる必要があります");
+      setError("All three digits must be unique.");
     } else {
       setError("");
     }
@@ -218,101 +193,22 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
           fontWeight="bold"
           color={isMyTurn ? "green.300" : "red.300"}
         >
-          {isMyTurn ? "あなたのターンです" : "相手のターンです"}
+          {isMyTurn ? "Make your move" : "Waiting for your opponent's move"}
         </Text>
 
-        <FormControl isInvalid={!!error}>
-          <HStack justify="center">
-            <PinInput
-              value={guess}
-              onChange={handlePinChange}
-              onComplete={handleComplete}
-              size="lg"
-              type="number"
-              isDisabled={!isMyTurn}
-            >
-              <PinInputField />
-              <PinInputField />
-              <PinInputField />
-            </PinInput>
-          </HStack>
-          <FormErrorMessage>{error}</FormErrorMessage>
-        </FormControl>
+        <NumberInputForm
+          guess={guess}
+          error={error}
+          isMyTurn={isMyTurn}
+          onPinChange={handlePinChange}
+          onComplete={handleComplete}
+          onSubmit={handleGuess}
+        />
 
-        <Button
-          onClick={handleGuess}
-          variant="solid"
-          colorScheme="brand"
-          isDisabled={!isMyTurn || !!error || guess.length !== 3}
-        >
-          Submit Guess
-        </Button>
-
-        <Tabs variant="unstyled" mt={4}>
-          <TabList bg="gray.700" borderRadius="md" p={1}>
-            <Tab
-              _selected={{ bg: "gray.900", color: "white" }}
-              borderRadius="md"
-            >
-              <LuUser style={{ marginRight: "8px" }} />
-              自分の結果
-            </Tab>
-            <Tab
-              _selected={{ bg: "gray.900", color: "white" }}
-              borderRadius="md"
-            >
-              {/* <LuFolder style={{ marginRight: "8px" }} /> */}
-              <LuUser style={{ marginRight: "8px" }} />
-              相手の結果
-            </Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel>
-              <Box overflowY="auto" maxH="300px">
-                <Table variant="simple" size="sm">
-                  <Thead position="sticky" top={0} bg="gray.700">
-                    <Tr>
-                      <Th color="white">Guess</Th>
-                      <Th color="white">Hit</Th>
-                      <Th color="white">Blow</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {myFeedbacks.map((feedback, index) => (
-                      <Tr key={index}>
-                        <Td>{feedback.guess}</Td>
-                        <Td>{feedback.hits}</Td>
-                        <Td>{feedback.blows}</Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </Box>
-            </TabPanel>
-            <TabPanel>
-              <Box overflowY="auto" maxH="300px">
-                <Table variant="simple" size="sm">
-                  <Thead position="sticky" top={0} bg="gray.700">
-                    <Tr>
-                      <Th color="white">Guess</Th>
-                      <Th color="white">Hit</Th>
-                      <Th color="white">Blow</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody>
-                    {opponentFeedbacks.map((feedback, index) => (
-                      <Tr key={index}>
-                        <Td>{feedback.guess}</Td>
-                        <Td>{feedback.hits}</Td>
-                        <Td>{feedback.blows}</Td>
-                      </Tr>
-                    ))}
-                  </Tbody>
-                </Table>
-              </Box>
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
+        <ResultTabsMulti
+          myFeedbacks={myFeedbacks}
+          opponentFeedbacks={opponentFeedbacks}
+        />
 
         <ExitButton
           roomId={roomId}
@@ -321,36 +217,17 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         />
       </VStack>
 
-      <Modal isOpen={showModal} onClose={handleCloseModal}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{isWinner ? "Victory!" : "Defeat"}</ModalHeader>
-          <ModalBody>
-            <Text>{isWinner ? "Congratulations!" : "Try again."}</Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleCloseModal}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ResultMultiModal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        isWinner={isWinner}
+      />
 
       {!playerExited && (
-        <Modal isOpen={opponentExited} onClose={handleOpponentExit}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Opponent Left</ModalHeader>
-            <ModalBody>
-              <Text>The other player has exited the game.</Text>
-            </ModalBody>
-            <ModalFooter>
-              <Button colorScheme="red" onClick={handleOpponentExit}>
-                Exit
-              </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+        <OpponentExitModal
+          isOpen={opponentExited}
+          onClose={handleOpponentExit}
+        />
       )}
     </Box>
   );

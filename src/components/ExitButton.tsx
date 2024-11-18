@@ -1,4 +1,3 @@
-// src/components/ExitButton.tsx
 import { useRouter } from "next/navigation";
 import { db } from "../utils/firebase";
 import {
@@ -24,7 +23,7 @@ import { useState } from "react";
 interface ExitButtonProps {
   roomId: string;
   playerId: string;
-  onPlayerExit?: () => void; // プレイヤー退出時のコールバックを追加
+  onPlayerExit?: () => void;
 }
 
 export default function ExitButton({
@@ -39,11 +38,10 @@ export default function ExitButton({
   const handleExit = async () => {
     const roomRef = doc(db, "rooms", roomId);
 
-    // ルームデータを取得
     const roomSnapshot = await getDoc(roomRef);
     if (!roomSnapshot.exists()) {
       alert("Room does not exist!");
-      if (onPlayerExit) onPlayerExit(); // プレイヤー退出コールバックを呼び出す
+      if (onPlayerExit) onPlayerExit();
       router.push("/");
       return;
     }
@@ -51,13 +49,11 @@ export default function ExitButton({
     const data = roomSnapshot.data();
     const currentCount = data?.playerCount || 0;
 
-    // プレイヤーを削除し、playerCountを更新
     await updateDoc(roomRef, {
       players: arrayRemove(playerId),
       playerCount: currentCount - 1,
     });
 
-    // playerCountを再取得し、0であればルームを削除
     const updatedSnapshot = await getDoc(roomRef);
     const updatedData = updatedSnapshot.data();
     if (updatedData && updatedData.playerCount <= 0) {
@@ -66,7 +62,7 @@ export default function ExitButton({
       console.log("Room deleted as it has no remaining players.");
     }
 
-    if (onPlayerExit) onPlayerExit(); // プレイヤー退出コールバックを呼び出す
+    if (onPlayerExit) onPlayerExit();
 
     router.push("/");
   };
@@ -80,20 +76,19 @@ export default function ExitButton({
         size="lg"
         borderRadius="md"
         mt={4}
-        bg="red.500" // 強制的に背景色を設定
-        _hover={{ bg: "red.600" }} // 明示的なホバースタイル
-        _active={{ bg: "red.700" }} // アクティブ時のスタイル
+        bg="red.500"
+        _hover={{ bg: "red.600" }}
+        _active={{ bg: "red.700" }}
       >
-        退出する
+        Leave
       </Button>
 
-      {/* 退出確認モーダル */}
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Exit Room</ModalHeader>
           <ModalBody>
-            <Text>本当に退出しますか？</Text>
+            <Text>Are you sure you want to leave the room?</Text>
           </ModalBody>
           <ModalFooter>
             <Button variant="ghost" onClick={onClose}>

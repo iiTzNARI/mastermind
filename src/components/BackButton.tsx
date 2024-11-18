@@ -4,8 +4,8 @@ import { Button } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 
 interface BackButtonProps {
-  label?: string; // ボタンに表示するテキスト (デフォルトは "Back")
-  onClickOverride?: () => void; // 戻る機能をオーバーライドする関数
+  label?: string;
+  onClickOverride?: () => void;
 }
 
 export default function BackButton({
@@ -16,9 +16,9 @@ export default function BackButton({
 
   const handleClick = () => {
     if (onClickOverride) {
-      onClickOverride(); // オーバーライドされた関数を実行
+      onClickOverride();
     } else {
-      router.back(); // 1つ前の画面に戻る
+      router.back();
     }
   };
 

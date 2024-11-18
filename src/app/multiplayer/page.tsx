@@ -40,16 +40,15 @@ export default function Multiplayer() {
     if (roomId) {
       const roomRef = doc(db, "rooms", roomId);
 
-      // Firestoreのリアルタイムリスナーを設定
       const unsubscribe = onSnapshot(roomRef, (snapshot) => {
         const data = snapshot.data();
         if (data?.isRoomDeleted) {
-          setShowTimeoutModal(true); // モーダルを表示
+          setShowTimeoutModal(true);
         }
       });
 
       return () => {
-        unsubscribe(); // クリーンアップ
+        unsubscribe();
       };
     }
   }, [roomId]);
@@ -69,7 +68,7 @@ export default function Multiplayer() {
   const handlePinChange = (value: string) => {
     setUserCode(value);
     if (value.length === 3 && !hasUniqueDigits(value)) {
-      setError("3桁の数字はすべて異なる必要があります");
+      setError("All three digits must be unique.");
     } else {
       setError("");
     }
@@ -77,15 +76,15 @@ export default function Multiplayer() {
 
   const handlePinComplete = (value: string) => {
     if (!hasUniqueDigits(value)) {
-      setError("3桁の数字はすべて異なる必要があります");
+      setError("3All three digits must be unique.");
     } else {
       setError("");
     }
   };
 
   const handleCreateRoom = async () => {
-    const currentTime = Timestamp.now(); // 現在のサーバー時間
-    const timeoutDuration = 3 * 60 * 60; // タイムアウトまでの秒数
+    const currentTime = Timestamp.now();
+    const timeoutDuration = 3 * 60 * 60;
     const timeoutTimestamp = new Timestamp(
       currentTime.seconds + timeoutDuration,
       currentTime.nanoseconds
@@ -102,16 +101,15 @@ export default function Multiplayer() {
     setRoomId(roomRef.id);
     setView("create");
 
-    // タイムアウトのカウントをサーバーで管理
     setTimeout(async () => {
       try {
         await updateDoc(roomRef, { isRoomDeleted: true });
-        await deleteDoc(roomRef); // ルームを削除
+        await deleteDoc(roomRef);
         console.log("Room deleted automatically due to inactivity.");
       } catch (error) {
         console.error("Failed to delete room:", error);
       }
-    }, timeoutDuration * 1000); // タイムアウト時間
+    }, timeoutDuration * 1000);
   };
 
   const handleJoinRoom = () => {
@@ -128,18 +126,15 @@ export default function Multiplayer() {
 
         if (!data) return;
 
-        // 既存のプレイヤー数に基づいて、プレイヤーを追加し playerCount を更新
         const updatedPlayerCount = data.playerCount + 1;
         const playerPosition = updatedPlayerCount === 1 ? "player1" : "player2";
 
-        // プレイヤー情報を設定
         transaction.update(roomRef, {
-          playerCount: updatedPlayerCount, // プレイヤー数を更新
+          playerCount: updatedPlayerCount,
           [`playerCodes.${playerPosition}`]: userCode,
-          players: [...(data.players || []), playerId], // プレイヤーIDを追加
+          players: [...(data.players || []), playerId],
         });
 
-        // 2人目のプレイヤーが「Game Start」を押した時点でターン設定
         if (updatedPlayerCount === 2) {
           const opponentId = data.players[0];
           const randomFirstPlayerId =
@@ -147,14 +142,13 @@ export default function Multiplayer() {
 
           transaction.update(roomRef, {
             isRoomActive: true,
-            currentTurn: randomFirstPlayerId, // ランダムに最初のターンを設定
+            currentTurn: randomFirstPlayerId,
           });
         }
       });
 
       setView("waiting");
 
-      // プレイヤー数が2人になるまでリアルタイムで監視し、2人揃ったらゲームを開始
       onSnapshot(roomRef, (snapshot) => {
         const data = snapshot.data();
         if (data?.playerCount === 2 && data?.isRoomActive) {
@@ -195,7 +189,6 @@ export default function Multiplayer() {
           players: [...(data.players || []), playerId],
         });
 
-        // プレイヤー数が2人揃った場合にのみターンをランダムに設定
         if (updatedPlayerCount === 2) {
           const opponentId =
             data.players[0] === playerId ? data.players[1] : data.players[0];
@@ -211,7 +204,6 @@ export default function Multiplayer() {
       setRoomId(inputRoomId);
       setView("waiting");
 
-      // プレイヤー数をリアルタイムで監視し、2人揃ったらゲームを開始
       onSnapshot(roomRef, (snapshot) => {
         const updatedData = snapshot.data();
         if (updatedData?.playerCount === 2 && updatedData?.isRoomActive) {

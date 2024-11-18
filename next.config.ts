@@ -1,7 +1,6 @@
 import { NextConfig } from "next";
 import withTM from "next-transpile-modules";
 
-// Chakra UIなどのモジュールをトランスパイル対象に追加
 const withTranspileModules = withTM(["@chakra-ui/react"]);
 
 const nextConfig: NextConfig = withTranspileModules({

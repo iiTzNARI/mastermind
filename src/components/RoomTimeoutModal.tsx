@@ -1,4 +1,3 @@
-// src/components/RoomTimeoutModal.tsx
 "use client";
 
 import { useEffect } from "react";
@@ -22,9 +21,9 @@ export default function RoomTimeoutModal({ isOpen }: RoomTimeoutModalProps) {
   useEffect(() => {
     if (isOpen) {
       const timer = setTimeout(() => {
-        router.push("/"); // 5秒後にトップページに遷移
+        router.push("/");
       }, 5000);
-      return () => clearTimeout(timer); // クリーンアップ
+      return () => clearTimeout(timer);
     }
   }, [isOpen, router]);
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { generateCode } from "../../../utils/generateCode";
 import { calculateFeedback } from "../../../utils/calculateFeedback";
 
-let secretCode = generateCode(); // ランダムなコードを生成
+let secretCode = generateCode();
 
 export async function POST(request: Request) {
   const { guess } = await request.json();
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   const feedback = calculateFeedback(guess, secretCode);
 
   if (feedback.hits === 3) {
-    secretCode = generateCode(); // 正解された場合、新しいコードを生成
+    secretCode = generateCode();
     return NextResponse.json({ message: "You won!", feedback });
   }
 

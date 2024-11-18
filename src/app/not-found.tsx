@@ -17,12 +17,12 @@ export default function NotFoundPage() {
       p={4}
     >
       <VStack spacing={6} textAlign="center">
-        <Heading size="2xl">404 - ページが見つかりません</Heading>
+        <Heading size="2xl">404</Heading>
         <Text fontSize="lg" color="gray.300">
-          お探しのページは存在しないか、移動された可能性があります。
+          Oops! Page not found.
         </Text>
         <Button colorScheme="blue" size="lg" onClick={() => router.push("/")}>
-          ホームに戻る
+          Back to home
         </Button>
       </VStack>
     </Box>

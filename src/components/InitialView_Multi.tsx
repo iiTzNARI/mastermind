@@ -4,9 +4,9 @@ import { Button, VStack } from "@chakra-ui/react";
 import BackButton from "./BackButton";
 
 interface InitialViewProps {
-  onCreateRoom: () => void; // Create Roomボタンのクリックハンドラ
-  onJoinRoom: () => void; // Join Roomボタンのクリックハンドラ
-  onBackToHome: () => void; // Back to Homeボタンのクリックハンドラ
+  onCreateRoom: () => void;
+  onJoinRoom: () => void;
+  onBackToHome: () => void;
 }
 
 export default function InitialView_Multi({
