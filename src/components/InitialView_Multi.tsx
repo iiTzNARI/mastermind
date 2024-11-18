@@ -21,7 +21,7 @@ export default function InitialView_Multi({
       <Button colorScheme="green" onClick={onJoinRoom}>
         Join Room
       </Button>
-      <BackButton label="Go Back" />
+      <BackButton label="Back" />
     </VStack>
   );
 }

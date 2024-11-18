@@ -272,7 +272,6 @@ export default function Multiplayer() {
           onPinChange={handlePinChange}
           onPinComplete={handlePinComplete}
           onJoinRoom={handleRoomJoin}
-          onBackToInitial={handleBackToHome}
         />
       )}
 

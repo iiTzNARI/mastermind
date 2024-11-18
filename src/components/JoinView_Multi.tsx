@@ -9,6 +9,7 @@ import {
   PinInputField,
   Button,
 } from "@chakra-ui/react";
+import BackButton from "./BackButton";
 
 const floatingLabelStyles = {
   position: "absolute" as const,
@@ -30,7 +31,6 @@ interface JoinViewMultiProps {
   onPinChange: (value: string) => void;
   onPinComplete: (value: string) => void;
   onJoinRoom: () => void;
-  onBackToInitial: () => void;
 }
 
 export default function JoinView_Multi({
@@ -42,7 +42,6 @@ export default function JoinView_Multi({
   onPinChange,
   onPinComplete,
   onJoinRoom,
-  onBackToInitial,
 }: JoinViewMultiProps) {
   return (
     <VStack spacing={4}>
@@ -78,9 +77,7 @@ export default function JoinView_Multi({
       >
         Join Room
       </Button>
-      <Button colorScheme="gray" variant="outline" onClick={onBackToInitial}>
-        Back to Initial
-      </Button>
+      <BackButton label="Back" />
     </VStack>
   );
 }
