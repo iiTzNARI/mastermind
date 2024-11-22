@@ -16,7 +16,7 @@ export default function NotFoundPage() {
       color="gray.50"
       p={4}
     >
-      <VStack spacing={6} textAlign="center">
+      <VStack gap={6} textAlign="center">
         <Heading size="2xl">404</Heading>
         <Text fontSize="lg" color="gray.300">
           Oops! Page not found.
