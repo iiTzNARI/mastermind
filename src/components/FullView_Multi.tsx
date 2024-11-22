@@ -8,7 +8,7 @@ export default function FullView_Multi({
   onBackToInitial,
 }: FullViewMultiProps) {
   return (
-    <VStack spacing={4} textAlign="center">
+    <VStack gap={4} textAlign="center">
       <Text color="red.500">This room is full. Please try another room.</Text>
       <Button colorScheme="blue" onClick={onBackToInitial}>
         Back to Home
