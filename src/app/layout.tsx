@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import ClientProvider from "./ClientProvider";
-import "./globals.css";
 import { Container, Box } from "@chakra-ui/react";
+import { Provider } from "@/components/ui/provider";
 
 export const metadata: Metadata = {
   title: "Mastermind Game",
@@ -14,9 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <ClientProvider>
+        <Provider>
           <Box
             bg="gray.800"
             display="flex"
@@ -38,7 +37,7 @@ export default function RootLayout({
               {children}
             </Container>
           </Box>
-        </ClientProvider>
+        </Provider>
       </body>
     </html>
   );

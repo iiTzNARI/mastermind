@@ -1,5 +1,5 @@
 "use client";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -9,67 +9,94 @@ import {
   VStack,
   // PinInput,
   // PinInputField,
-  HStack,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  FormControl,
-  FormErrorMessage,
+  // HStack,
+  // Modal,
+  // ModalOverlay,
+  // ModalContent,
+  // ModalHeader,
+  // ModalBody,
+  // ModalFooter,
+  // FormControl,
+  // FormErrorMessage,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
+  // Thead,
+  // Tbody,
+  // Tr,
+  // Th,
+  // Td,
+  Stack,
+  Input,
 } from "@chakra-ui/react";
-const PinInput = dynamic(
-  () => import("@chakra-ui/react").then((mod) => mod.PinInput),
-  { ssr: false }
-);
-const PinInputField = dynamic(
-  () => import("@chakra-ui/react").then((mod) => mod.PinInputField),
-  { ssr: false }
-);
+import {
+  DialogRoot,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+} from "@/components/ui/dialog";
+import { Field } from "@/components/ui/field";
+// import { PinInput } from "@/components/ui/pin-input";
 
 export default function Singleplayer() {
-  const [guess, setGuess] = useState("");
+  const [guess, setGuess] = useState<string[]>(["", "", ""]);
   const [feedbacks, setFeedbacks] = useState<
     { guess: string; hits: number; blows: number }[]
   >([]);
   const [message, setMessage] = useState("");
   const [isWinner, setIsWinner] = useState(false);
-  const [pinInputKey, setPinInputKey] = useState(0);
+  // const [pinInputKey, setPinInputKey] = useState(0);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const hasUniqueDigits = (value: string) => {
-    return new Set(value).size === value.length;
+  // ユニークな数字かどうかチェックする関数
+  const isValidGuess = (value: string[]) => {
+    return (
+      value.every((digit) => digit !== "") &&
+      new Set(value).size === value.length
+    );
   };
 
-  const handleComplete = (value: string) => {
-    setGuess(value);
-    if (value.length === 3 && !hasUniqueDigits(value)) {
-      setError("3桁の数字はすべて異なる必要があります");
-    } else {
-      setError("");
+  // 入力完了時の処理
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const value = e.target.value;
+
+    // 数字のみ許可し、1文字に制限
+    if (/^\d?$/.test(value)) {
+      const newGuess = [...guess]; // 現在の状態をコピー
+      newGuess[index] = value; // 入力値を更新
+      setGuess(newGuess);
+
+      if (!isValidGuess(newGuess)) {
+        setError("3桁の数字はすべて異なる必要があります");
+      } else {
+        setError("");
+      }
     }
   };
 
+  // サーバーにリクエストを送信して結果を取得する関数
   const handleGuess = async () => {
     const response = await fetch("/api/singleplayer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guess }),
+      body: JSON.stringify({ guess: guess.join("") }), // string[] を文字列に変換して送信
     });
     const data = await response.json();
 
     if (data.feedback) {
       setFeedbacks([
-        { guess, hits: data.feedback.hits, blows: data.feedback.blows },
-        ...feedbacks, // 新しいフィードバックを先頭に追加
+        {
+          guess: guess.join(""),
+          hits: data.feedback.hits,
+          blows: data.feedback.blows,
+        },
+        ...feedbacks,
       ]);
       setMessage(data.message || "");
       if (data.feedback.hits === 3) {
@@ -79,8 +106,7 @@ export default function Singleplayer() {
       setMessage(data.message);
     }
 
-    setGuess("");
-    setPinInputKey((prevKey) => prevKey + 1);
+    setGuess(["", "", ""]); // 入力後にリセット
   };
 
   const handleExit = () => {
@@ -89,53 +115,55 @@ export default function Singleplayer() {
 
   return (
     <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
-      <VStack spacing={4}>
+      <VStack gap={4}>
         <Text fontSize="2xl" fontWeight="bold" color="brand.300">
           Single Player - Mastermind
         </Text>
-        <FormControl isInvalid={!!error}>
-          <HStack spacing={2} justify="center">
-            <PinInput
-              key={pinInputKey}
-              size="lg"
-              onComplete={handleComplete}
-              type="number"
-            >
-              <PinInputField />
-              <PinInputField />
-              <PinInputField />
-            </PinInput>
-          </HStack>
-          <FormErrorMessage>{error}</FormErrorMessage>
-        </FormControl>
+        <Field invalid={!!error} errorText={error}>
+          <Stack direction="row" justify="center" gap={2}>
+            {guess.map((digit, index) => (
+              <Input
+                key={index}
+                value={digit}
+                onChange={(e) => handleInputChange(e, index)}
+                placeholder="0"
+                maxLength={1} // 1桁のみ許可
+                type="text"
+                textAlign="center"
+                fontSize="lg"
+                width="40px"
+              />
+            ))}
+          </Stack>
+        </Field>
         <Button
           onClick={handleGuess}
           variant="solid"
           colorScheme="brand"
-          isDisabled={guess.length !== 3 || !!error}
+          disabled={guess.some((digit) => digit === "") || !!error} // 入力の空チェック
         >
           Submit Guess
         </Button>
 
         <Box mt={4} overflowY="auto" maxH="300px" width="100%">
-          <Table variant="simple" size="sm">
-            <Thead position="sticky" top={0} bg="gray.700">
-              <Tr>
-                <Th color="white">Guess</Th>
-                <Th color="white">Hits</Th>
-                <Th color="white">Blows</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
+          <Table.Root size="sm">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader>Guess</Table.ColumnHeader>
+                <Table.ColumnHeader>Hits</Table.ColumnHeader>
+                <Table.ColumnHeader>Blows</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
               {feedbacks.map((feedback, index) => (
-                <Tr key={index}>
-                  <Td>{feedback.guess}</Td>
-                  <Td>{feedback.hits}</Td>
-                  <Td>{feedback.blows}</Td>
-                </Tr>
+                <Table.Row key={index}>
+                  <Table.Cell>{feedback.guess}</Table.Cell>
+                  <Table.Cell>{feedback.hits}</Table.Cell>
+                  <Table.Cell>{feedback.blows}</Table.Cell>
+                </Table.Row>
               ))}
-            </Tbody>
-          </Table>
+            </Table.Body>
+          </Table.Root>
         </Box>
 
         {message && (
@@ -148,20 +176,28 @@ export default function Singleplayer() {
           退室する
         </Button>
 
-        <Modal isOpen={isWinner} onClose={handleExit}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>おめでとうございます！</ModalHeader>
-            <ModalBody>
+        <DialogRoot
+          open={isWinner}
+          onOpenChange={(isOpen) => !isOpen && handleExit()}
+        >
+          <DialogTrigger asChild>
+            <Box />
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>おめでとうございます！</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
               <Text>あなたが勝ちました！</Text>
-            </ModalBody>
-            <ModalFooter>
+            </DialogBody>
+            <DialogFooter>
               <Button colorScheme="blue" onClick={handleExit}>
                 ホームに戻る
               </Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
+            </DialogFooter>
+            <DialogCloseTrigger />
+          </DialogContent>
+        </DialogRoot>
       </VStack>
     </Box>
   );
