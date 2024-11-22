@@ -1,26 +1,9 @@
-import {
-  VStack,
-  Text,
-  Spinner,
-  FormControl,
-  InputGroup,
-  Input,
-  FormLabel,
-  InputRightElement,
-} from "@chakra-ui/react";
+"use client";
+
+import { VStack, Text, Spinner, Input, Stack } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
 import CopyButton from "@/components/CopyButton";
 import ExitButton from "@/components/ExitButton";
-
-const floatingLabelStyles = {
-  position: "absolute" as const,
-  top: "-8px",
-  left: "10px",
-  backgroundColor: "gray.800",
-  paddingX: "1",
-  fontSize: "sm",
-  color: "gray.500",
-  transition: "0.2s ease",
-};
 
 interface WaitingViewMultiProps {
   roomId: string | null;
@@ -34,27 +17,30 @@ export default function WaitingView_Multi({
   onExit,
 }: WaitingViewMultiProps) {
   return (
-    <VStack spacing={4} maxWidth="sm" width="100%">
-      <Text>対戦相手を待っています...</Text>
+    <VStack gap={4} maxWidth="sm" width="100%" textAlign="center">
+      {/* Loading Indicator */}
+      <Text fontSize="lg" fontWeight="bold" color="blue.300">
+        Waiting for an opponent...
+      </Text>
       <Spinner color="blue.300" size="md" />
+
+      {/* Room ID Display */}
       {roomId && (
-        <>
-          <FormControl position="relative">
-            <InputGroup size="md">
-              <Input
-                placeholder=" "
-                value={roomId}
-                isReadOnly
-                _placeholder={{ color: "transparent" }}
-              />
-              <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
-              <InputRightElement width="4.5rem" pr="1">
-                <CopyButton value={roomId}></CopyButton>
-              </InputRightElement>
-            </InputGroup>
-          </FormControl>
-        </>
+        <Field label="Room ID">
+          <Stack direction="row" align="center" gap={2}>
+            <Input
+              value={roomId}
+              readOnly
+              bg="gray.700"
+              borderColor="gray.600"
+              color="gray.300"
+            />
+            <CopyButton value={roomId} />
+          </Stack>
+        </Field>
       )}
+
+      {/* Exit Button */}
       <ExitButton
         roomId={roomId || ""}
         playerId={playerId}

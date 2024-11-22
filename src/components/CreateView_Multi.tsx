@@ -1,42 +1,19 @@
 "use client";
 
-import {
-  VStack,
-  FormControl,
-  InputGroup,
-  Input,
-  FormLabel,
-  InputRightElement,
-  Text,
-  Button,
-  HStack,
-  PinInput,
-  PinInputField,
-  FormErrorMessage,
-} from "@chakra-ui/react";
+import { VStack, Input, Text, Button, HStack, Stack } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
 import CopyButton from "@/components/CopyButton";
 
 interface CreateViewProps {
   roomId: string | null;
-  userCode: string;
+  userCode: string; // string 型
   error: string;
-  onPinChange: (value: string) => void;
-  onPinComplete: (value: string) => void;
+  onPinChange: (value: string) => void; // 値を渡す関数
+  onPinComplete: (value: string) => void; // 完了時に値を渡す関数
   onGameStart: () => void;
   onBackToInitial: () => void;
   isGameStartDisabled: boolean;
 }
-
-const floatingLabelStyles = {
-  position: "absolute" as const,
-  top: "-8px",
-  left: "10px",
-  backgroundColor: "gray.800",
-  paddingX: "1",
-  fontSize: "sm",
-  color: "gray.500",
-  transition: "0.2s ease",
-};
 
 export default function CreateView_Multi({
   roomId,
@@ -48,43 +25,64 @@ export default function CreateView_Multi({
   onBackToInitial,
   isGameStartDisabled,
 }: CreateViewProps) {
+  const handleDigitChange = (value: string, index: number) => {
+    if (/^\d?$/.test(value)) {
+      const updatedCode =
+        userCode.substring(0, index) + value + userCode.substring(index + 1);
+      onPinChange(updatedCode);
+
+      if (updatedCode.length === 3) {
+        onPinComplete(updatedCode);
+      }
+    }
+  };
+
   return (
-    <VStack spacing={4} maxWidth="sm" width="100%">
-      <FormControl position="relative">
-        <InputGroup size="md">
+    <VStack gap={4} maxWidth="sm" width="100%">
+      {/* Room ID Field */}
+      <Field label="Room ID" position="relative">
+        <Stack direction="row" align="center" gap={2}>
           <Input
             placeholder=" "
             value={roomId || ""}
-            isReadOnly
+            readOnly
             _placeholder={{ color: "transparent" }}
+            bg="gray.700"
+            borderColor="gray.600"
+            color="gray.300"
           />
-          <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
-          <InputRightElement width="4.5rem" pr="1">
-            <CopyButton value={roomId || ""} />
-          </InputRightElement>
-        </InputGroup>
-      </FormControl>
-      <Text>Enter your 3-digit code:</Text>
-      <FormControl isInvalid={!!error}>
-        <HStack spacing={2} justify="center">
-          <PinInput
-            size="lg"
-            type="number"
-            value={userCode}
-            onChange={onPinChange}
-            onComplete={onPinComplete}
-          >
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-          </PinInput>
+          <CopyButton value={roomId || ""} />
+        </Stack>
+      </Field>
+
+      {/* User Code Input */}
+      <Text fontWeight="bold">Enter your 3-digit code:</Text>
+      <Field label="Enter your code" errorText={error} invalid={!!error}>
+        <HStack gap={2} justify="center">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Input
+              key={index}
+              value={userCode[index] || ""}
+              onChange={(e) => handleDigitChange(e.target.value, index)}
+              maxLength={1}
+              textAlign="center"
+              fontSize="lg"
+              width="40px"
+              type="text"
+              placeholder="0"
+              bg="gray.700"
+              borderColor="gray.600"
+              color="white"
+            />
+          ))}
         </HStack>
-        <FormErrorMessage>{error}</FormErrorMessage>
-      </FormControl>
+      </Field>
+
+      {/* Buttons */}
       <Button
         colorScheme="blue"
         onClick={onGameStart}
-        isDisabled={isGameStartDisabled}
+        disabled={isGameStartDisabled}
       >
         Game Start
       </Button>

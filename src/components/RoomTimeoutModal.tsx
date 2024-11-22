@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
+import { Text } from "@chakra-ui/react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  Text,
-} from "@chakra-ui/react";
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 
 interface RoomTimeoutModalProps {
@@ -28,17 +28,18 @@ export default function RoomTimeoutModal({ isOpen }: RoomTimeoutModalProps) {
   }, [isOpen, router]);
 
   return (
-    <Modal isOpen={isOpen} onClose={() => {}} isCentered>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Room Timeout</ModalHeader>
-        <ModalBody>
+    <DialogRoot open={isOpen} onOpenChange={() => {}}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Room Timeout</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
           <Text>The room has been deleted due to inactivity.</Text>
           <Text mt={4}>
             You will be redirected to the homepage in 5 seconds.
           </Text>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+        </DialogBody>
+      </DialogContent>
+    </DialogRoot>
   );
 }

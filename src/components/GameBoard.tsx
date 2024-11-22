@@ -187,7 +187,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
 
   return (
     <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         <Text
           fontSize="lg"
           fontWeight="bold"
@@ -200,7 +200,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
           guess={guess}
           error={error}
           isMyTurn={isMyTurn}
-          onPinChange={handlePinChange}
+          onInputChange={handlePinChange}
           onComplete={handleComplete}
           onSubmit={handleGuess}
         />

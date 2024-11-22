@@ -1,13 +1,14 @@
+"use client";
+
+import { Text, Button } from "@chakra-ui/react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Text,
-  Button,
-} from "@chakra-ui/react";
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface OpponentExitModalProps {
   isOpen: boolean;
@@ -19,19 +20,20 @@ export default function OpponentExitModal({
   onClose,
 }: OpponentExitModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Opponent Left</ModalHeader>
-        <ModalBody>
+    <DialogRoot open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Opponent Left</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
           <Text>The other player has exited the game.</Text>
-        </ModalBody>
-        <ModalFooter>
+        </DialogBody>
+        <DialogFooter>
           <Button colorScheme="red" onClick={onClose}>
             Exit
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 }

@@ -1,18 +1,13 @@
-import {
-  FormControl,
-  FormErrorMessage,
-  HStack,
-  PinInput,
-  PinInputField,
-  Button,
-} from "@chakra-ui/react";
+// src/components/NumberInputForm.tsx
+import { HStack, Input, Button, VStack } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
 
 interface NumberInputFormProps {
   guess: string;
   error: string;
   isMyTurn: boolean;
-  onPinChange: (value: string) => void;
-  onComplete: (value: string) => void;
+  onInputChange: (value: string) => void;
+  onComplete: (value: string) => void; // onComplete を追加
   onSubmit: () => void;
 }
 
@@ -20,38 +15,61 @@ export default function NumberInputForm({
   guess,
   error,
   isMyTurn,
-  onPinChange,
-  onComplete,
+  onInputChange,
+  onComplete, // 追加
   onSubmit,
 }: NumberInputFormProps) {
-  return (
-    <>
-      <FormControl isInvalid={!!error}>
-        <HStack justify="center">
-          <PinInput
-            value={guess}
-            onChange={onPinChange}
-            onComplete={onComplete}
-            size="lg"
-            type="number"
-            isDisabled={!isMyTurn}
-          >
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-          </PinInput>
-        </HStack>
-        <FormErrorMessage>{error}</FormErrorMessage>
-      </FormControl>
+  // 1文字ずつ更新する関数
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const value = e.target.value;
 
+    if (/^\d?$/.test(value)) {
+      const newGuess = guess.split("");
+      newGuess[index] = value;
+      const updatedGuess = newGuess.join("");
+      onInputChange(updatedGuess);
+
+      // 入力が3桁揃ったら onComplete を呼び出す
+      if (updatedGuess.length === 3) {
+        onComplete(updatedGuess);
+      }
+    }
+  };
+
+  return (
+    <VStack gap={4} width="100%" maxW="sm">
+      {/* Field コンポーネントでエラーメッセージを表示 */}
+      <Field invalid={!!error} errorText={error} label="Enter your guess">
+        <HStack justify="center" gap={2}>
+          {/* 3つの入力フィールドを動的にレンダリング */}
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Input
+              key={index}
+              value={guess[index] || ""}
+              onChange={(e) => handleInputChange(e, index)}
+              maxLength={1}
+              type="text"
+              textAlign="center"
+              fontSize="lg"
+              width="50px"
+              disabled={!isMyTurn}
+            />
+          ))}
+        </HStack>
+      </Field>
+
+      {/* ボタン */}
       <Button
         onClick={onSubmit}
         variant="solid"
         colorScheme="brand"
-        isDisabled={!isMyTurn || !!error || guess.length !== 3}
+        disabled={!isMyTurn || !!error || guess.length !== 3}
       >
         Submit Guess
       </Button>
-    </>
+    </VStack>
   );
 }

@@ -1,17 +1,4 @@
-import {
-  Tabs,
-  TabList,
-  TabPanels,
-  TabPanel,
-  Tab,
-  Box,
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
-} from "@chakra-ui/react";
+import { Tabs, Table, Box } from "@chakra-ui/react";
 import { LuUser } from "react-icons/lu";
 
 interface Feedback {
@@ -30,63 +17,84 @@ export default function ResultTabsMulti({
   opponentFeedbacks,
 }: ResultTabsMultiProps) {
   return (
-    <Tabs variant="unstyled" mt={4}>
-      <TabList bg="gray.700" borderRadius="md" p={1}>
-        <Tab _selected={{ bg: "gray.900", color: "white" }} borderRadius="md">
+    <Tabs.Root defaultValue="you" mt={4}>
+      {/* Tab List */}
+      <Tabs.List bg="gray.700" borderRadius="md" p={1}>
+        <Tabs.Trigger
+          value="you"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "8px",
+            borderRadius: "8px",
+            backgroundColor: "gray.900",
+            color: "white",
+          }}
+        >
           <LuUser style={{ marginRight: "8px" }} />
           You
-        </Tab>
-        <Tab _selected={{ bg: "gray.900", color: "white" }} borderRadius="md">
+        </Tabs.Trigger>
+        <Tabs.Trigger
+          value="opponent"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "8px",
+            borderRadius: "8px",
+            backgroundColor: "gray.900",
+            color: "white",
+          }}
+        >
           <LuUser style={{ marginRight: "8px" }} />
           Opponent
-        </Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel>
-          <Box overflowY="auto" maxH="300px">
-            <Table variant="simple" size="sm">
-              <Thead position="sticky" top={0} bg="gray.700">
-                <Tr>
-                  <Th color="white">Guess</Th>
-                  <Th color="white">Hit</Th>
-                  <Th color="white">Blow</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {myFeedbacks.map((feedback, index) => (
-                  <Tr key={index}>
-                    <Td>{feedback.guess}</Td>
-                    <Td>{feedback.hits}</Td>
-                    <Td>{feedback.blows}</Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
-        </TabPanel>
-        <TabPanel>
-          <Box overflowY="auto" maxH="300px">
-            <Table variant="simple" size="sm">
-              <Thead position="sticky" top={0} bg="gray.700">
-                <Tr>
-                  <Th color="white">Guess</Th>
-                  <Th color="white">Hit</Th>
-                  <Th color="white">Blow</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {opponentFeedbacks.map((feedback, index) => (
-                  <Tr key={index}>
-                    <Td>{feedback.guess}</Td>
-                    <Td>{feedback.hits}</Td>
-                    <Td>{feedback.blows}</Td>
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </Box>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+        </Tabs.Trigger>
+      </Tabs.List>
+
+      {/* Tab Content */}
+      <Tabs.Content value="you">
+        <Box overflowY="auto" maxH="300px">
+          <Table.Root size="sm">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader>Guess</Table.ColumnHeader>
+                <Table.ColumnHeader>Hit</Table.ColumnHeader>
+                <Table.ColumnHeader>Blow</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {myFeedbacks.map((feedback, index) => (
+                <Table.Row key={index}>
+                  <Table.Cell>{feedback.guess}</Table.Cell>
+                  <Table.Cell>{feedback.hits}</Table.Cell>
+                  <Table.Cell>{feedback.blows}</Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      </Tabs.Content>
+      <Tabs.Content value="opponent">
+        <Box overflowY="auto" maxH="300px">
+          <Table.Root size="sm">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeader>Guess</Table.ColumnHeader>
+                <Table.ColumnHeader>Hit</Table.ColumnHeader>
+                <Table.ColumnHeader>Blow</Table.ColumnHeader>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {opponentFeedbacks.map((feedback, index) => (
+                <Table.Row key={index}>
+                  <Table.Cell>{feedback.guess}</Table.Cell>
+                  <Table.Cell>{feedback.hits}</Table.Cell>
+                  <Table.Cell>{feedback.blows}</Table.Cell>
+                </Table.Row>
+              ))}
+            </Table.Body>
+          </Table.Root>
+        </Box>
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }

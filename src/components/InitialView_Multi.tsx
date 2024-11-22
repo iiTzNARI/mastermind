@@ -14,7 +14,7 @@ export default function InitialView_Multi({
   onJoinRoom,
 }: InitialViewProps) {
   return (
-    <VStack spacing={4}>
+    <VStack gap={4}>
       <Button colorScheme="blue" onClick={onCreateRoom}>
         Create Room
       </Button>

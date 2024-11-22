@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from "next/navigation";
 import { db } from "../utils/firebase";
 import {
@@ -8,17 +10,20 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import {
-  Button,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
+  // Button,
   Text,
+  useDisclosure,
 } from "@chakra-ui/react";
+import {
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ExitButtonProps {
   roomId: string;
@@ -32,7 +37,7 @@ export default function ExitButton({
   onPlayerExit,
 }: ExitButtonProps) {
   const router = useRouter();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { open, onOpen, onClose } = useDisclosure(); // `isOpen` を `open` に変更
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleExit = async () => {
@@ -83,14 +88,15 @@ export default function ExitButton({
         Leave
       </Button>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Exit Room</ModalHeader>
-          <ModalBody>
+      <DialogRoot open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Exit Room</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
             <Text>Are you sure you want to leave the room?</Text>
-          </ModalBody>
-          <ModalFooter>
+          </DialogBody>
+          <DialogFooter>
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
@@ -98,13 +104,13 @@ export default function ExitButton({
               colorScheme="red"
               onClick={handleExit}
               ml={3}
-              isLoading={isDeleting}
+              loading={isDeleting} // 修正済み
             >
               Exit
             </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </>
   );
 }

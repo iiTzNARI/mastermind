@@ -1,33 +1,21 @@
 "use client";
-import { useRouter } from "next/navigation"; // 修正：next/navigation から useRouter をインポート
+import { useRouter } from "next/navigation";
 import { Box, Heading, Text, Button, Stack } from "@chakra-ui/react";
 
 export default function HomePage() {
-  const router = useRouter(); // 修正：useRouter を next/navigation のものに変更
+  const router = useRouter();
 
   return (
-    <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
+    <Box p={4} textAlign="center" minH="100vh">
       <Heading as="h1" size="xl" mb={4} color="brand.300">
         Mastermind Game
       </Heading>
-      <Text mb={4} color="gray.300">
-        Choose a game mode:
-      </Text>
+      <Text mb={4}>Choose a game mode:</Text>
       <Stack direction={{ base: "column", sm: "row" }} gap={4} justify="center">
-        <Button
-          variant="solid"
-          colorScheme="brand"
-          onClick={() => router.push("/singleplayer")} // ページ遷移
-        >
+        <Button onClick={() => router.push("/singleplayer")}>
           Single Player
         </Button>
-        <Button
-          variant="solid"
-          colorScheme="blue"
-          onClick={() => router.push("/multiplayer")} // ページ遷移
-        >
-          Multiplayer
-        </Button>
+        <Button onClick={() => router.push("/multiplayer")}>Multiplayer</Button>
       </Stack>
     </Box>
   );

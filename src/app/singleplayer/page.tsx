@@ -1,5 +1,4 @@
 "use client";
-// import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -7,23 +6,7 @@ import {
   Button,
   Text,
   VStack,
-  // PinInput,
-  // PinInputField,
-  // HStack,
-  // Modal,
-  // ModalOverlay,
-  // ModalContent,
-  // ModalHeader,
-  // ModalBody,
-  // ModalFooter,
-  // FormControl,
-  // FormErrorMessage,
   Table,
-  // Thead,
-  // Tbody,
-  // Tr,
-  // Th,
-  // Td,
   Stack,
   Input,
 } from "@chakra-ui/react";
@@ -38,7 +21,6 @@ import {
   DialogCloseTrigger,
 } from "@/components/ui/dialog";
 import { Field } from "@/components/ui/field";
-// import { PinInput } from "@/components/ui/pin-input";
 
 export default function Singleplayer() {
   const [guess, setGuess] = useState<string[]>(["", "", ""]);
@@ -47,45 +29,34 @@ export default function Singleplayer() {
   >([]);
   const [message, setMessage] = useState("");
   const [isWinner, setIsWinner] = useState(false);
-  // const [pinInputKey, setPinInputKey] = useState(0);
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // ユニークな数字かどうかチェックする関数
-  const isValidGuess = (value: string[]) => {
-    return (
-      value.every((digit) => digit !== "") &&
-      new Set(value).size === value.length
-    );
-  };
+  const isValidGuess = (value: string[]) =>
+    value.every((digit) => digit !== "") &&
+    new Set(value).size === value.length;
 
-  // 入力完了時の処理
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
   ) => {
     const value = e.target.value;
-
-    // 数字のみ許可し、1文字に制限
     if (/^\d?$/.test(value)) {
-      const newGuess = [...guess]; // 現在の状態をコピー
-      newGuess[index] = value; // 入力値を更新
+      const newGuess = [...guess];
+      newGuess[index] = value;
       setGuess(newGuess);
 
-      if (!isValidGuess(newGuess)) {
-        setError("3桁の数字はすべて異なる必要があります");
-      } else {
-        setError("");
-      }
+      setError(
+        !isValidGuess(newGuess) ? "3桁の数字はすべて異なる必要があります" : ""
+      );
     }
   };
 
-  // サーバーにリクエストを送信して結果を取得する関数
   const handleGuess = async () => {
     const response = await fetch("/api/singleplayer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guess: guess.join("") }), // string[] を文字列に変換して送信
+      body: JSON.stringify({ guess: guess.join("") }),
     });
     const data = await response.json();
 
@@ -99,53 +70,49 @@ export default function Singleplayer() {
         ...feedbacks,
       ]);
       setMessage(data.message || "");
-      if (data.feedback.hits === 3) {
-        setIsWinner(true);
-      }
+      if (data.feedback.hits === 3) setIsWinner(true);
     } else {
       setMessage(data.message);
     }
 
-    setGuess(["", "", ""]); // 入力後にリセット
+    setGuess(["", "", ""]);
   };
 
-  const handleExit = () => {
-    router.push("/");
-  };
+  const handleExit = () => router.push("/");
 
   return (
-    <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
+    <Box p={4} minH="100vh" textAlign="center" bgColor="red.300">
       <VStack gap={4}>
-        <Text fontSize="2xl" fontWeight="bold" color="brand.300">
+        <Text fontSize="2xl" fontWeight="bold" color="brand.500">
           Single Player - Mastermind
         </Text>
-        <Field invalid={!!error} errorText={error}>
-          <Stack direction="row" justify="center" gap={2}>
-            {guess.map((digit, index) => (
-              <Input
-                key={index}
-                value={digit}
-                onChange={(e) => handleInputChange(e, index)}
-                placeholder="0"
-                maxLength={1} // 1桁のみ許可
-                type="text"
-                textAlign="center"
-                fontSize="lg"
-                width="40px"
-              />
-            ))}
-          </Stack>
-        </Field>
+        <Box display="flex" justifyContent="center">
+          <Field invalid={!!error} errorText={error}>
+            <Stack direction="row" justify="center" gap={2}>
+              {guess.map((digit, index) => (
+                <Input
+                  key={index}
+                  value={digit}
+                  onChange={(e) => handleInputChange(e, index)}
+                  placeholder="0"
+                  maxLength={1}
+                  type="text"
+                  textAlign="center"
+                  width="40px"
+                  borderColor="gray.100"
+                />
+              ))}
+            </Stack>
+          </Field>
+        </Box>
         <Button
           onClick={handleGuess}
-          variant="solid"
           colorScheme="brand"
-          disabled={guess.some((digit) => digit === "") || !!error} // 入力の空チェック
+          disabled={guess.some((digit) => digit === "") || !!error}
         >
           Submit Guess
         </Button>
-
-        <Box mt={4} overflowY="auto" maxH="300px" width="100%">
+        <Box overflowY="auto" maxH="300px" width="100%">
           <Table.Root size="sm">
             <Table.Header>
               <Table.Row>
@@ -165,17 +132,10 @@ export default function Singleplayer() {
             </Table.Body>
           </Table.Root>
         </Box>
-
-        {message && (
-          <Text mt={4} color="gray.300">
-            {message}
-          </Text>
-        )}
-
-        <Button mt={6} colorScheme="red" onClick={handleExit}>
-          退室する
+        {message && <Text color="gray.500">{message}</Text>}
+        <Button colorScheme="red" onClick={handleExit}>
+          Exit
         </Button>
-
         <DialogRoot
           open={isWinner}
           onOpenChange={(isOpen) => !isOpen && handleExit()}
@@ -185,14 +145,14 @@ export default function Singleplayer() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>おめでとうございます！</DialogTitle>
+              <DialogTitle>Congratulations!</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <Text>あなたが勝ちました！</Text>
+              <Text>You won!</Text>
             </DialogBody>
             <DialogFooter>
               <Button colorScheme="blue" onClick={handleExit}>
-                ホームに戻る
+                Back to Home
               </Button>
             </DialogFooter>
             <DialogCloseTrigger />

@@ -1,13 +1,14 @@
+import { Button, Text } from "@chakra-ui/react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Text,
-} from "@chakra-ui/react";
+  DialogRoot,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogCloseTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface FinishGameModalProps {
   isOpen: boolean;
@@ -19,21 +20,26 @@ export default function FinishGameModal({
   onClose,
 }: FinishGameModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Room Deleted</ModalHeader>
-        <ModalBody>
+    <DialogRoot open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogTrigger asChild>
+        {/* 空要素でトリガーを隠します */}
+        <div />
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Room Deleted</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
           <Text>
             The room has been automatically deleted due to inactivity.
           </Text>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" onClick={onClose}>
-            Back to Home
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogBody>
+        <DialogFooter>
+          <DialogCloseTrigger asChild>
+            <Button colorScheme="blue">Back to Home</Button>
+          </DialogCloseTrigger>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 }

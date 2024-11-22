@@ -1,13 +1,14 @@
+"use client";
+
+import { Text, Button } from "@chakra-ui/react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Text,
-  Button,
-} from "@chakra-ui/react";
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ResultMultiModalProps {
   isOpen: boolean;
@@ -21,19 +22,24 @@ export default function ResultMultiModal({
   isWinner,
 }: ResultMultiModalProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>{isWinner ? "Victory!" : "Defeat"}</ModalHeader>
-        <ModalBody>
-          <Text>{isWinner ? "Congratulations!" : "Try again."}</Text>
-        </ModalBody>
-        <ModalFooter>
+    <DialogRoot open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isWinner ? "Victory!" : "Defeat"}</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <Text>
+            {isWinner
+              ? "Congratulations! You won the game!"
+              : "You lost. Better luck next time!"}
+          </Text>
+        </DialogBody>
+        <DialogFooter>
           <Button colorScheme="blue" onClick={onClose}>
             Close
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   );
 }

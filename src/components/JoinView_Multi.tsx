@@ -1,35 +1,17 @@
-import {
-  VStack,
-  FormControl,
-  Input,
-  FormLabel,
-  FormErrorMessage,
-  HStack,
-  PinInput,
-  PinInputField,
-  Button,
-} from "@chakra-ui/react";
-import BackButton from "./BackButton";
+"use client";
 
-const floatingLabelStyles = {
-  position: "absolute" as const,
-  top: "-8px",
-  left: "10px",
-  backgroundColor: "gray.800",
-  paddingX: "1",
-  fontSize: "sm",
-  color: "gray.500",
-  transition: "0.2s ease",
-};
+import { VStack, Input, Text, Button, HStack } from "@chakra-ui/react";
+import { Field } from "@/components/ui/field";
+import BackButton from "./BackButton";
 
 interface JoinViewMultiProps {
   inputRoomId: string;
-  userCode: string;
+  userCode: string; // userCode を string 型に
   error: string;
   isJoinDisabled: boolean;
   onInputRoomIdChange: (value: string) => void;
-  onPinChange: (value: string) => void;
-  onPinComplete: (value: string) => void;
+  onPinChange: (value: string) => void; // onPinChange を使用
+  onPinComplete: (value: string) => void; // 完了時の値を受け取る
   onJoinRoom: () => void;
 }
 
@@ -43,40 +25,65 @@ export default function JoinView_Multi({
   onPinComplete,
   onJoinRoom,
 }: JoinViewMultiProps) {
+  const handleDigitChange = (value: string, index: number) => {
+    if (/^\d?$/.test(value)) {
+      const updatedCode =
+        userCode.substring(0, index) + value + userCode.substring(index + 1);
+      onPinChange(updatedCode);
+
+      if (updatedCode.length === 3) {
+        onPinComplete(updatedCode);
+      }
+    }
+  };
+
   return (
-    <VStack spacing={4}>
-      <FormControl position="relative">
+    <VStack gap={4} maxWidth="sm" width="100%">
+      {/* Room ID Input */}
+      <Field label="Room ID">
         <Input
-          placeholder=" "
+          placeholder="Enter Room ID"
           value={inputRoomId}
           onChange={(e) => onInputRoomIdChange(e.target.value)}
-          _placeholder={{ color: "transparent" }}
+          bg="gray.700"
+          borderColor="gray.600"
+          color="gray.300"
         />
-        <FormLabel sx={floatingLabelStyles}>Room ID</FormLabel>
-      </FormControl>
-      <FormControl isInvalid={!!error}>
-        <HStack spacing={2} justify="center">
-          <PinInput
-            size="lg"
-            type="number"
-            value={userCode}
-            onChange={onPinChange}
-            onComplete={onPinComplete}
-          >
-            <PinInputField />
-            <PinInputField />
-            <PinInputField />
-          </PinInput>
+      </Field>
+
+      {/* User Code Input */}
+      <Text fontWeight="bold">Enter your 3-digit code:</Text>
+      <Field label="Enter your code" errorText={error} invalid={!!error}>
+        <HStack gap={2} justify="center">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Input
+              key={index}
+              value={userCode[index] || ""}
+              onChange={(e) => handleDigitChange(e.target.value, index)}
+              maxLength={1}
+              textAlign="center"
+              fontSize="lg"
+              width="40px"
+              type="text"
+              placeholder="0"
+              bg="gray.700"
+              borderColor="gray.600"
+              color="white"
+            />
+          ))}
         </HStack>
-        <FormErrorMessage>{error}</FormErrorMessage>
-      </FormControl>
+      </Field>
+
+      {/* Join Room Button */}
       <Button
         colorScheme="green"
         onClick={onJoinRoom}
-        isDisabled={isJoinDisabled}
+        disabled={isJoinDisabled}
       >
         Join Room
       </Button>
+
+      {/* Back Button */}
       <BackButton label="Back" />
     </VStack>
   );
