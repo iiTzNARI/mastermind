@@ -47,7 +47,6 @@ export default function OpponentExitModal({
 
       const updatedSnapshot = await getDoc(roomRef);
       const updatedData = updatedSnapshot.data();
-      console.log(updatedData);
 
       if (updatedData?.playerCount <= 0) {
         safeDeleteRoom(roomId);

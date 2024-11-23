@@ -200,7 +200,8 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         <NumberInputForm
           guess={guess}
           error={error}
-          label="Submit"
+          labelForMessage="Enter your Guess."
+          labelForButton="Submit"
           isMyTurn={isMyTurn}
           onInputChange={handlePinChange}
           onComplete={handleComplete}

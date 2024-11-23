@@ -84,7 +84,8 @@ export default function Singleplayer() {
         <NumberInputForm
           guess={guess}
           error={error}
-          label="Submit Guess"
+          labelForMessage="Enter your Guess."
+          labelForButton="Submit Guess"
           isMyTurn={true}
           onInputChange={handleInputChange}
           onComplete={handleComplete}

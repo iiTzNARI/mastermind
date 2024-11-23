@@ -79,7 +79,8 @@ export default function CreateView_Multi({
       <NumberInputForm
         guess={userCode}
         error={error}
-        label="Game Start"
+        labelForMessage="Enter your 3 digit code."
+        labelForButton="Game Start"
         isMyTurn={true}
         onInputChange={onPinChange}
         onComplete={handleComplete}

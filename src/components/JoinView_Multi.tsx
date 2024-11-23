@@ -77,7 +77,8 @@ export default function JoinView_Multi({
       <NumberInputForm
         guess={userCode}
         error={error}
-        label="Join Room"
+        labelForMessage="Enter you 3 digit code."
+        labelForButton="Join Room"
         isMyTurn={true}
         onInputChange={onPinChange}
         onComplete={handleComplete}

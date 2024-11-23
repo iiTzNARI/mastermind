@@ -6,7 +6,8 @@ import { useRef } from "react";
 interface NumberInputFormProps {
   guess: string;
   error: string;
-  label: string;
+  labelForMessage: string;
+  labelForButton: string;
   isMyTurn: boolean;
   onInputChange: (value: string) => void;
   onComplete: (value: string) => void;
@@ -17,7 +18,8 @@ export default function NumberInputForm({
   guess,
   error,
   isMyTurn,
-  label,
+  labelForMessage,
+  labelForButton,
   onInputChange,
   onComplete,
   onSubmit,
@@ -61,7 +63,8 @@ export default function NumberInputForm({
         <Field
           invalid={!!error}
           errorText={error}
-          label="Enter your guess"
+          // label="Enter your guess"
+          label={labelForMessage}
           alignItems="center"
         >
           <Stack direction="row" justify="center" gap={2}>
@@ -98,7 +101,7 @@ export default function NumberInputForm({
         disabled={!isMyTurn || !!error || guess.length !== 3}
       >
         {/* Submit Guess */}
-        {label}
+        {labelForButton}
       </Button>
     </VStack>
   );

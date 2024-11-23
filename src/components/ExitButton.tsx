@@ -84,7 +84,7 @@ export default function ExitButton({
         _active={{ bg: "red.700" }}
         color="gray.100"
       >
-        Leave
+        Exit
       </Button>
 
       <DialogRoot open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
