@@ -8,8 +8,8 @@ import {
   Box,
   InputAddon,
 } from "@chakra-ui/react";
-import { Field } from "@/components/ui/field";
 import CopyButton from "@/components/CopyButton";
+import NumberInputForm from "./NumberInputForm";
 
 interface CreateViewProps {
   roomId: string | null;
@@ -30,18 +30,9 @@ export default function CreateView_Multi({
   onPinComplete,
   onGameStart,
   onBackToInitial,
-  isGameStartDisabled,
 }: CreateViewProps) {
-  const handleDigitChange = (value: string, index: number) => {
-    if (/^\d?$/.test(value)) {
-      const updatedCode =
-        userCode.substring(0, index) + value + userCode.substring(index + 1);
-      onPinChange(updatedCode);
-
-      if (updatedCode.length === 3) {
-        onPinComplete(updatedCode);
-      }
-    }
+  const handleComplete = (value: string) => {
+    onPinComplete(value);
   };
 
   return (
@@ -85,37 +76,15 @@ export default function CreateView_Multi({
       </Box>
 
       {/* User Code Input */}
-      <Box display="flex" justifyContent="center">
-        <Field label="Enter your code" errorText={error} invalid={!!error}>
-          <Stack direction="row" justify="center" gap={2}>
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Input
-                key={index}
-                value={userCode[index] || ""}
-                onChange={(e) => handleDigitChange(e.target.value, index)}
-                maxLength={1}
-                textAlign="center"
-                fontSize="lg"
-                width="40px"
-                type="text"
-                placeholder="0"
-                bg="gray.700"
-                borderColor="gray.600"
-                color="white"
-              />
-            ))}
-          </Stack>
-        </Field>
-      </Box>
-
-      {/* Buttons */}
-      <Button
-        colorScheme="blue"
-        onClick={onGameStart}
-        disabled={isGameStartDisabled}
-      >
-        Game Start
-      </Button>
+      <NumberInputForm
+        guess={userCode}
+        error={error}
+        label="Game Start"
+        isMyTurn={true}
+        onInputChange={onPinChange}
+        onComplete={handleComplete}
+        onSubmit={onGameStart}
+      />
       <Button variant="outline" onClick={onBackToInitial} mt={2}>
         Back
       </Button>

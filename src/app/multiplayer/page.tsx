@@ -7,7 +7,7 @@ import {
   addDoc,
   doc,
   getDoc,
-  updateDoc,
+  // updateDoc,
   runTransaction,
   onSnapshot,
   deleteDoc,
@@ -23,6 +23,19 @@ import FinishGameModal from "@/components/FinishGameModal";
 import FullView_Multi from "@/components/FullView_Multi";
 import RoomTimeoutModal from "@/components/RoomTimeoutModal";
 
+export const safeDeleteRoom = async (roomId: string) => {
+  const roomRef = doc(db, "rooms", roomId);
+  try {
+    const roomSnapshot = await getDoc(roomRef);
+    if (roomSnapshot.exists()) {
+      await deleteDoc(roomRef);
+    } else {
+      console.warn("Room does not exist, skipping deletion.");
+    }
+  } catch (error) {
+    console.error("Failed to delete room:", error);
+  }
+};
 export default function Multiplayer() {
   const [view, setView] = useState<
     "initial" | "create" | "join" | "waiting" | "game" | "full"
@@ -100,14 +113,8 @@ export default function Multiplayer() {
     setRoomId(roomRef.id);
     setView("create");
 
-    setTimeout(async () => {
-      try {
-        await updateDoc(roomRef, { isRoomDeleted: true });
-        await deleteDoc(roomRef);
-        console.log("Room deleted automatically due to inactivity.");
-      } catch (error) {
-        console.error("Failed to delete room:", error);
-      }
+    roomDeletionTimeout.current = setTimeout(async () => {
+      await safeDeleteRoom(roomRef.id);
     }, timeoutDuration * 1000);
   };
 
@@ -225,7 +232,6 @@ export default function Multiplayer() {
       try {
         const roomRef = doc(db, "rooms", roomId);
         await deleteDoc(roomRef);
-        console.log("Room deleted successfully.");
       } catch (error) {
         console.error("Failed to delete room:", error);
       }

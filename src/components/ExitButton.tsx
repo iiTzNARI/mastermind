@@ -64,7 +64,6 @@ export default function ExitButton({
     if (updatedData && updatedData.playerCount <= 0) {
       setIsDeleting(true);
       await deleteDoc(roomRef);
-      console.log("Room deleted as it has no remaining players.");
     }
 
     if (onPlayerExit) onPlayerExit();

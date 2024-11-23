@@ -200,6 +200,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         <NumberInputForm
           guess={guess}
           error={error}
+          label="Submit"
           isMyTurn={isMyTurn}
           onInputChange={handlePinChange}
           onComplete={handleComplete}
@@ -228,6 +229,8 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         <OpponentExitModal
           isOpen={opponentExited}
           onClose={handleOpponentExit}
+          roomId={roomId}
+          playerId={playerId}
         />
       )}
     </Box>

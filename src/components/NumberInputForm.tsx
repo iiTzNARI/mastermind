@@ -6,6 +6,7 @@ import { useRef } from "react";
 interface NumberInputFormProps {
   guess: string;
   error: string;
+  label: string;
   isMyTurn: boolean;
   onInputChange: (value: string) => void;
   onComplete: (value: string) => void;
@@ -16,6 +17,7 @@ export default function NumberInputForm({
   guess,
   error,
   isMyTurn,
+  label,
   onInputChange,
   onComplete,
   onSubmit,
@@ -56,7 +58,12 @@ export default function NumberInputForm({
   return (
     <VStack gap={4} width="100%" maxW="sm">
       <Box display="flex" justifyContent="center">
-        <Field invalid={!!error} errorText={error} label="Enter your guess">
+        <Field
+          invalid={!!error}
+          errorText={error}
+          label="Enter your guess"
+          alignItems="center"
+        >
           <Stack direction="row" justify="center" gap={2}>
             {Array.from({ length: 3 }).map((_, index) => (
               <Input
@@ -90,7 +97,8 @@ export default function NumberInputForm({
         colorScheme="brand"
         disabled={!isMyTurn || !!error || guess.length !== 3}
       >
-        Submit Guess
+        {/* Submit Guess */}
+        {label}
       </Button>
     </VStack>
   );

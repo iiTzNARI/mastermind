@@ -1,15 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Box,
-  Button,
-  Text,
-  VStack,
-  Table,
-  Stack,
-  Input,
-} from "@chakra-ui/react";
+import { Box, Button, Text, VStack, Table } from "@chakra-ui/react";
 import {
   DialogRoot,
   DialogTrigger,
@@ -20,10 +12,10 @@ import {
   DialogFooter,
   DialogCloseTrigger,
 } from "@/components/ui/dialog";
-import { Field } from "@/components/ui/field";
+import NumberInputForm from "@/components/NumberInputForm";
 
 export default function Singleplayer() {
-  const [guess, setGuess] = useState<string[]>(["", "", ""]);
+  const [guess, setGuess] = useState<string>(""); // 合わせて一つの文字列に変更
   const [feedbacks, setFeedbacks] = useState<
     { guess: string; hits: number; blows: number }[]
   >([]);
@@ -32,23 +24,19 @@ export default function Singleplayer() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const isValidGuess = (value: string[]) =>
-    value.every((digit) => digit !== "") &&
-    new Set(value).size === value.length;
+  const isValidGuess = (value: string) =>
+    value.length === 3 && new Set(value.split("")).size === value.length;
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
-    const value = e.target.value;
-    if (/^\d?$/.test(value)) {
-      const newGuess = [...guess];
-      newGuess[index] = value;
-      setGuess(newGuess);
+  const handleInputChange = (value: string) => {
+    setGuess(value);
+    setError(
+      !isValidGuess(value) ? "3桁の数字はすべて異なる必要があります" : ""
+    );
+  };
 
-      setError(
-        !isValidGuess(newGuess) ? "3桁の数字はすべて異なる必要があります" : ""
-      );
+  const handleComplete = (value: string) => {
+    if (isValidGuess(value)) {
+      setError("");
     }
   };
 
@@ -56,14 +44,14 @@ export default function Singleplayer() {
     const response = await fetch("/api/singleplayer", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ guess: guess.join("") }),
+      body: JSON.stringify({ guess }),
     });
     const data = await response.json();
 
     if (data.feedback) {
       setFeedbacks([
         {
-          guess: guess.join(""),
+          guess,
           hits: data.feedback.hits,
           blows: data.feedback.blows,
         },
@@ -75,7 +63,7 @@ export default function Singleplayer() {
       setMessage(data.message);
     }
 
-    setGuess(["", "", ""]);
+    setGuess("");
   };
 
   const handleExit = () => router.push("/");
@@ -86,32 +74,18 @@ export default function Singleplayer() {
         <Text fontSize="2xl" fontWeight="bold" color="brand.500">
           Single Player - Mastermind
         </Text>
-        <Box display="flex" justifyContent="center">
-          <Field invalid={!!error} errorText={error} alignItems="center">
-            <Stack direction="row" justify="center" gap={2}>
-              {guess.map((digit, index) => (
-                <Input
-                  key={index}
-                  value={digit}
-                  onChange={(e) => handleInputChange(e, index)}
-                  placeholder="0"
-                  maxLength={1}
-                  type="text"
-                  textAlign="center"
-                  width="40px"
-                  borderColor="gray.100"
-                />
-              ))}
-            </Stack>
-          </Field>
-        </Box>
-        <Button
-          onClick={handleGuess}
-          colorScheme="brand"
-          disabled={guess.some((digit) => digit === "") || !!error}
-        >
-          Submit Guess
-        </Button>
+
+        {/* NumberInputForm の使用 */}
+        <NumberInputForm
+          guess={guess}
+          error={error}
+          label="Submit Guess"
+          isMyTurn={true}
+          onInputChange={handleInputChange}
+          onComplete={handleComplete}
+          onSubmit={handleGuess}
+        />
+
         <Box overflowY="auto" maxH="300px" width="100%">
           <Table.Root size="sm">
             <Table.Header>
