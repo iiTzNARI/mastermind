@@ -77,13 +77,13 @@ export default function ExitButton({
       <Button
         onClick={onOpen}
         variant="solid"
-        colorScheme="red"
         size="lg"
         borderRadius="md"
         mt={4}
         bg="red.500"
         _hover={{ bg: "red.600" }}
         _active={{ bg: "red.700" }}
+        color="gray.100"
       >
         Leave
       </Button>

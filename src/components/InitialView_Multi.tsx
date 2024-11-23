@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, VStack } from "@chakra-ui/react";
+import { Button, Stack } from "@chakra-ui/react";
 import BackButton from "./BackButton";
 
 interface InitialViewProps {
@@ -14,14 +14,16 @@ export default function InitialView_Multi({
   onJoinRoom,
 }: InitialViewProps) {
   return (
-    <VStack gap={4}>
-      <Button colorScheme="blue" onClick={onCreateRoom}>
-        Create Room
-      </Button>
-      <Button colorScheme="green" onClick={onJoinRoom}>
-        Join Room
-      </Button>
+    <>
+      <Stack direction={{ base: "column", sm: "row" }} gap={4} justify="center">
+        <Button colorScheme="blue" onClick={onCreateRoom}>
+          Create Room
+        </Button>
+        <Button colorScheme="green" onClick={onJoinRoom}>
+          Join Room
+        </Button>
+      </Stack>
       <BackButton label="Back" />
-    </VStack>
+    </>
   );
 }

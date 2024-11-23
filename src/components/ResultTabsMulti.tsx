@@ -17,38 +17,47 @@ export default function ResultTabsMulti({
   opponentFeedbacks,
 }: ResultTabsMultiProps) {
   return (
-    <Tabs.Root defaultValue="you" mt={4} width="80%">
+    <Tabs.Root defaultValue="you" mt={4} width={{ base: "100%", md: "80%" }}>
       {/* Tab List */}
-      <Tabs.List bg="gray.700" borderRadius="md" p={1}>
-        <Tabs.Trigger
-          value="you"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: "8px",
-            borderRadius: "8px",
-            backgroundColor: "gray.900",
-            color: "white",
-          }}
+      <Box display="flex" justifyContent="center" width="100%">
+        <Tabs.List
+          bg="gray.700"
+          borderRadius="md"
+          p={1}
+          width={{ base: "100%", md: "fit-content" }}
         >
-          <LuUser style={{ marginRight: "8px" }} />
-          You
-        </Tabs.Trigger>
-        <Tabs.Trigger
-          value="opponent"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: "8px",
-            borderRadius: "8px",
-            backgroundColor: "gray.900",
-            color: "white",
-          }}
-        >
-          <LuUser style={{ marginRight: "8px" }} />
-          Opponent
-        </Tabs.Trigger>
-      </Tabs.List>
+          <Tabs.Trigger
+            value="you"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "8px",
+              borderRadius: "8px",
+              backgroundColor: "gray.900",
+              color: "white",
+            }}
+            width={{ base: "100%", md: "fit-content" }}
+          >
+            <LuUser style={{ marginRight: "8px" }} />
+            You
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="opponent"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "8px",
+              borderRadius: "8px",
+              backgroundColor: "gray.900",
+              color: "white",
+            }}
+            width={{ base: "100%", md: "fit-content" }}
+          >
+            <LuUser style={{ marginRight: "8px" }} />
+            Opponent
+          </Tabs.Trigger>
+        </Tabs.List>
+      </Box>
 
       {/* Tab Content */}
       <Tabs.Content value="you">

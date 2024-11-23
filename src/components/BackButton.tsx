@@ -2,6 +2,7 @@
 
 import { Button } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
+import { LuArrowLeft } from "react-icons/lu";
 
 interface BackButtonProps {
   label?: string;
@@ -30,6 +31,7 @@ export default function BackButton({
       size="md"
       mt={4}
     >
+      <LuArrowLeft />
       {label}
     </Button>
   );

@@ -11,7 +11,7 @@ import {
 } from "firebase/firestore";
 import { calculateFeedback } from "../utils/calculateFeedback";
 import ExitButton from "./ExitButton";
-import { Box, Text, VStack } from "@chakra-ui/react";
+import { Box, Spinner, Text, VStack } from "@chakra-ui/react";
 import ResultMultiModal from "./ResultMultiModal";
 import OpponentExitModal from "./OpponentExitModal";
 import NumberInputForm from "./NumberInputForm";
@@ -195,6 +195,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
         >
           {isMyTurn ? "Make your move" : "Waiting for your opponent's move"}
         </Text>
+        {isMyTurn ? "" : <Spinner color="blue.300" size="md" />}
 
         <NumberInputForm
           guess={guess}

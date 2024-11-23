@@ -1,13 +1,14 @@
 // src/components/NumberInputForm.tsx
 import { Input, Button, VStack, Stack, Box } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
+import { useRef } from "react";
 
 interface NumberInputFormProps {
   guess: string;
   error: string;
   isMyTurn: boolean;
   onInputChange: (value: string) => void;
-  onComplete: (value: string) => void; // onComplete を追加
+  onComplete: (value: string) => void;
   onSubmit: () => void;
 }
 
@@ -16,10 +17,11 @@ export default function NumberInputForm({
   error,
   isMyTurn,
   onInputChange,
-  onComplete, // 追加
+  onComplete,
   onSubmit,
 }: NumberInputFormProps) {
-  // 1文字ずつ更新する関数
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number
@@ -32,25 +34,39 @@ export default function NumberInputForm({
       const updatedGuess = newGuess.join("");
       onInputChange(updatedGuess);
 
-      // 入力が3桁揃ったら onComplete を呼び出す
+      if (value && index < 2) {
+        inputRefs.current[index + 1]?.focus();
+      }
+
       if (updatedGuess.length === 3) {
         onComplete(updatedGuess);
       }
     }
   };
 
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    if (e.key === "Backspace" && !guess[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
   return (
     <VStack gap={4} width="100%" maxW="sm">
-      {/* Field コンポーネントでエラーメッセージを表示 */}
       <Box display="flex" justifyContent="center">
         <Field invalid={!!error} errorText={error} label="Enter your guess">
           <Stack direction="row" justify="center" gap={2}>
-            {/* 3つの入力フィールドを動的にレンダリング */}
             {Array.from({ length: 3 }).map((_, index) => (
               <Input
                 key={index}
+                ref={(e) => {
+                  inputRefs.current[index] = e;
+                }}
                 value={guess[index] || ""}
                 onChange={(e) => handleInputChange(e, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
                 maxLength={1}
                 type="text"
                 textAlign="center"
