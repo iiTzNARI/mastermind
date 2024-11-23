@@ -24,18 +24,23 @@ export default function Singleplayer() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const isValidGuess = (value: string) =>
-    value.length === 3 && new Set(value.split("")).size === value.length;
+  const hasUniqueDigits = (value: string) => {
+    return new Set(value).size === value.length;
+  };
 
   const handleInputChange = (value: string) => {
     setGuess(value);
-    setError(
-      !isValidGuess(value) ? "3桁の数字はすべて異なる必要があります" : ""
-    );
+    if (value.length === 3 && !hasUniqueDigits(value)) {
+      setError("All three digits must be unique.");
+    } else {
+      setError("");
+    }
   };
 
   const handleComplete = (value: string) => {
-    if (isValidGuess(value)) {
+    if (!hasUniqueDigits(value)) {
+      setError("All three digits must be unique.");
+    } else {
       setError("");
     }
   };

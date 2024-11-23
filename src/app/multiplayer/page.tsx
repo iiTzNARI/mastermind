@@ -88,7 +88,7 @@ export default function Multiplayer() {
 
   const handlePinComplete = (value: string) => {
     if (!hasUniqueDigits(value)) {
-      setError("3All three digits must be unique.");
+      setError("All three digits must be unique.");
     } else {
       setError("");
     }
