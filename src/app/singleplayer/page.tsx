@@ -81,13 +81,13 @@ export default function Singleplayer() {
   const handleExit = () => router.push("/");
 
   return (
-    <Box p={4} minH="100vh" textAlign="center" bgColor="red.300">
+    <Box p={4} minH="100vh" textAlign="center">
       <VStack gap={4}>
         <Text fontSize="2xl" fontWeight="bold" color="brand.500">
           Single Player - Mastermind
         </Text>
         <Box display="flex" justifyContent="center">
-          <Field invalid={!!error} errorText={error}>
+          <Field invalid={!!error} errorText={error} alignItems="center">
             <Stack direction="row" justify="center" gap={2}>
               {guess.map((digit, index) => (
                 <Input

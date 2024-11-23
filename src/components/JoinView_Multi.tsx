@@ -1,6 +1,13 @@
 "use client";
 
-import { VStack, Input, Text, Button, HStack } from "@chakra-ui/react";
+import {
+  VStack,
+  Input,
+  Button,
+  Stack,
+  Box,
+  InputAddon,
+} from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import BackButton from "./BackButton";
 
@@ -38,41 +45,67 @@ export default function JoinView_Multi({
   };
 
   return (
-    <VStack gap={4} maxWidth="sm" width="100%">
+    <VStack gap={4} width="100%">
       {/* Room ID Input */}
-      <Field label="Room ID">
-        <Input
-          placeholder="Enter Room ID"
-          value={inputRoomId}
-          onChange={(e) => onInputRoomIdChange(e.target.value)}
-          bg="gray.700"
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+        maxWidth="600px"
+        mx="auto"
+      >
+        <Stack
+          direction="row"
+          gap={0}
+          align="center"
+          borderWidth="1px"
           borderColor="gray.600"
-          color="gray.300"
-        />
-      </Field>
+          borderRadius="md"
+          bg="gray.700"
+          overflow="hidden"
+          width="100%"
+        >
+          <InputAddon bg="gray.600" color="white" fontWeight="bold">
+            Room ID:
+          </InputAddon>
+          <Input
+            placeholder="Enter Room ID"
+            value={inputRoomId}
+            onChange={(e) => onInputRoomIdChange(e.target.value)}
+            border="none"
+            bg="gray.700"
+            color="gray.300"
+            flex="1"
+            focusRing="none"
+          />
+        </Stack>
+      </Box>
 
       {/* User Code Input */}
-      <Text fontWeight="bold">Enter your 3-digit code:</Text>
-      <Field label="Enter your code" errorText={error} invalid={!!error}>
-        <HStack gap={2} justify="center">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Input
-              key={index}
-              value={userCode[index] || ""}
-              onChange={(e) => handleDigitChange(e.target.value, index)}
-              maxLength={1}
-              textAlign="center"
-              fontSize="lg"
-              width="40px"
-              type="text"
-              placeholder="0"
-              bg="gray.700"
-              borderColor="gray.600"
-              color="white"
-            />
-          ))}
-        </HStack>
-      </Field>
+      {/* <Text fontWeight="bold">Enter your 3-digit code:</Text> */}
+      <Box display="flex" justifyContent="center">
+        <Field label="Enter your code" errorText={error} invalid={!!error}>
+          <Stack direction="row" justify="center" gap={2}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Input
+                key={index}
+                value={userCode[index] || ""}
+                onChange={(e) => handleDigitChange(e.target.value, index)}
+                maxLength={1}
+                textAlign="center"
+                fontSize="lg"
+                width="40px"
+                type="text"
+                placeholder="0"
+                bg="gray.700"
+                borderColor="gray.600"
+                color="white"
+              />
+            ))}
+          </Stack>
+        </Field>
+      </Box>
 
       {/* Join Room Button */}
       <Button

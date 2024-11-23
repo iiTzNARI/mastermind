@@ -1,15 +1,22 @@
 "use client";
 
-import { VStack, Input, Text, Button, HStack, Stack } from "@chakra-ui/react";
+import {
+  VStack,
+  Input,
+  Button,
+  Stack,
+  Box,
+  InputAddon,
+} from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import CopyButton from "@/components/CopyButton";
 
 interface CreateViewProps {
   roomId: string | null;
-  userCode: string; // string 型
+  userCode: string;
   error: string;
-  onPinChange: (value: string) => void; // 値を渡す関数
-  onPinComplete: (value: string) => void; // 完了時に値を渡す関数
+  onPinChange: (value: string) => void;
+  onPinComplete: (value: string) => void;
   onGameStart: () => void;
   onBackToInitial: () => void;
   isGameStartDisabled: boolean;
@@ -38,45 +45,68 @@ export default function CreateView_Multi({
   };
 
   return (
-    <VStack gap={4} maxWidth="sm" width="100%">
+    <VStack gap={4} width="100%">
       {/* Room ID Field */}
-      <Field label="Room ID" position="relative">
-        <Stack direction="row" align="center" gap={2}>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        width="100%"
+        maxWidth="600px"
+        mx="auto"
+      >
+        <Stack
+          direction="row"
+          gap={0}
+          align="center"
+          borderWidth="1px"
+          borderColor="gray.600"
+          borderRadius="md"
+          bg="gray.700"
+          overflow="hidden"
+          width="fit"
+        >
+          <InputAddon bg="gray.600" color="white" fontWeight="bold">
+            Room ID:
+          </InputAddon>
           <Input
-            placeholder=" "
             value={roomId || ""}
             readOnly
-            _placeholder={{ color: "transparent" }}
+            border="none"
             bg="gray.700"
-            borderColor="gray.600"
             color="gray.300"
+            flex="1"
+            focusRing="none"
           />
-          <CopyButton value={roomId || ""} />
+          <Box>
+            <CopyButton value={roomId || ""} />
+          </Box>
         </Stack>
-      </Field>
+      </Box>
 
       {/* User Code Input */}
-      <Text fontWeight="bold">Enter your 3-digit code:</Text>
-      <Field label="Enter your code" errorText={error} invalid={!!error}>
-        <HStack gap={2} justify="center">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Input
-              key={index}
-              value={userCode[index] || ""}
-              onChange={(e) => handleDigitChange(e.target.value, index)}
-              maxLength={1}
-              textAlign="center"
-              fontSize="lg"
-              width="40px"
-              type="text"
-              placeholder="0"
-              bg="gray.700"
-              borderColor="gray.600"
-              color="white"
-            />
-          ))}
-        </HStack>
-      </Field>
+      <Box display="flex" justifyContent="center">
+        <Field label="Enter your code" errorText={error} invalid={!!error}>
+          <Stack direction="row" justify="center" gap={2}>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Input
+                key={index}
+                value={userCode[index] || ""}
+                onChange={(e) => handleDigitChange(e.target.value, index)}
+                maxLength={1}
+                textAlign="center"
+                fontSize="lg"
+                width="40px"
+                type="text"
+                placeholder="0"
+                bg="gray.700"
+                borderColor="gray.600"
+                color="white"
+              />
+            ))}
+          </Stack>
+        </Field>
+      </Box>
 
       {/* Buttons */}
       <Button

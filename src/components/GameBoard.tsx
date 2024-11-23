@@ -187,7 +187,7 @@ export default function GameBoard({ roomId, playerId }: GameBoardProps) {
 
   return (
     <Box p={4} bg="gray.800" color="gray.50" minH="100vh" textAlign="center">
-      <VStack gap={4} align="stretch">
+      <VStack gap={4} align="center">
         <Text
           fontSize="lg"
           fontWeight="bold"

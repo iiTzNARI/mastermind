@@ -17,7 +17,7 @@ export default function ResultTabsMulti({
   opponentFeedbacks,
 }: ResultTabsMultiProps) {
   return (
-    <Tabs.Root defaultValue="you" mt={4}>
+    <Tabs.Root defaultValue="you" mt={4} width="80%">
       {/* Tab List */}
       <Tabs.List bg="gray.700" borderRadius="md" p={1}>
         <Tabs.Trigger
@@ -52,7 +52,7 @@ export default function ResultTabsMulti({
 
       {/* Tab Content */}
       <Tabs.Content value="you">
-        <Box overflowY="auto" maxH="300px">
+        <Box overflowY="auto" maxH="300px" width="100%">
           <Table.Root size="sm">
             <Table.Header>
               <Table.Row>

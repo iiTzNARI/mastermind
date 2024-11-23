@@ -1,5 +1,5 @@
 // src/components/NumberInputForm.tsx
-import { HStack, Input, Button, VStack } from "@chakra-ui/react";
+import { Input, Button, VStack, Stack, Box } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 
 interface NumberInputFormProps {
@@ -42,24 +42,30 @@ export default function NumberInputForm({
   return (
     <VStack gap={4} width="100%" maxW="sm">
       {/* Field コンポーネントでエラーメッセージを表示 */}
-      <Field invalid={!!error} errorText={error} label="Enter your guess">
-        <HStack justify="center" gap={2}>
-          {/* 3つの入力フィールドを動的にレンダリング */}
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Input
-              key={index}
-              value={guess[index] || ""}
-              onChange={(e) => handleInputChange(e, index)}
-              maxLength={1}
-              type="text"
-              textAlign="center"
-              fontSize="lg"
-              width="50px"
-              disabled={!isMyTurn}
-            />
-          ))}
-        </HStack>
-      </Field>
+      <Box display="flex" justifyContent="center">
+        <Field invalid={!!error} errorText={error} label="Enter your guess">
+          <Stack direction="row" justify="center" gap={2}>
+            {/* 3つの入力フィールドを動的にレンダリング */}
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Input
+                key={index}
+                value={guess[index] || ""}
+                onChange={(e) => handleInputChange(e, index)}
+                maxLength={1}
+                type="text"
+                textAlign="center"
+                fontSize="lg"
+                width="40px"
+                disabled={!isMyTurn}
+                placeholder="0"
+                bg="gray.700"
+                borderColor="gray.600"
+                color="white"
+              />
+            ))}
+          </Stack>
+        </Field>
+      </Box>
 
       {/* ボタン */}
       <Button

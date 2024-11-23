@@ -225,7 +225,15 @@ export default function Multiplayer() {
   };
 
   return (
-    <Box p={4} textAlign="center" bg="gray.800" color="gray.50" minH="100vh">
+    <Box
+      p={4}
+      textAlign="center"
+      color="gray.50"
+      minH="100vh"
+      maxWidth="900px"
+      width={{ base: "100%", md: "80%" }}
+      mx="auto"
+    >
       <Heading as="h1" size="xl" mb={4} color="blue.300">
         Multiplayer - Mastermind
       </Heading>
