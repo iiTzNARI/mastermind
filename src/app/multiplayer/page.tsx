@@ -220,8 +220,19 @@ export default function Multiplayer() {
     setView("initial");
   };
 
-  const handleBackToHome = () => {
+  const handleBackToHome = async () => {
+    if (view === "create" && roomId) {
+      try {
+        const roomRef = doc(db, "rooms", roomId);
+        await deleteDoc(roomRef);
+        console.log("Room deleted successfully.");
+      } catch (error) {
+        console.error("Failed to delete room:", error);
+      }
+    }
+
     setView("initial");
+    setRoomId(null);
   };
 
   return (
