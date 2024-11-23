@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { db } from "../utils/firebase";
 import { doc, updateDoc, getDoc, arrayRemove } from "firebase/firestore";
-import { safeDeleteRoom } from "@/app/multiplayer/page";
+import { safeDeleteRoom } from "@/utils/safeDeleteRoom";
 
 interface OpponentExitModalProps {
   isOpen: boolean;

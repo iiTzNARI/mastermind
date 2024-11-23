@@ -22,20 +22,8 @@ import WaitingView_Multi from "@/components/WaitingView_Multi";
 import FinishGameModal from "@/components/FinishGameModal";
 import FullView_Multi from "@/components/FullView_Multi";
 import RoomTimeoutModal from "@/components/RoomTimeoutModal";
+import { safeDeleteRoom } from "@/utils/safeDeleteRoom";
 
-export const safeDeleteRoom = async (roomId: string) => {
-  const roomRef = doc(db, "rooms", roomId);
-  try {
-    const roomSnapshot = await getDoc(roomRef);
-    if (roomSnapshot.exists()) {
-      await deleteDoc(roomRef);
-    } else {
-      console.warn("Room does not exist, skipping deletion.");
-    }
-  } catch (error) {
-    console.error("Failed to delete room:", error);
-  }
-};
 export default function Multiplayer() {
   const [view, setView] = useState<
     "initial" | "create" | "join" | "waiting" | "game" | "full"
