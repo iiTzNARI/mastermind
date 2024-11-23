@@ -83,7 +83,7 @@ export default function Multiplayer() {
 
   const handleCreateRoom = async () => {
     const currentTime = Timestamp.now();
-    const timeoutDuration = 3 * 60 * 60;
+    const timeoutDuration = 60;
     const timeoutTimestamp = new Timestamp(
       currentTime.seconds + timeoutDuration,
       currentTime.nanoseconds
